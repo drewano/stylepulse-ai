@@ -35,3 +35,21 @@ export interface PublishedPost {
   comments: number;
   shares: number;
 }
+
+export interface Storyboard {
+  id: string;
+  social_account_id: string;
+  user_prompt: string;
+  enriched_prompt: string | null;
+  scenes: string[];
+  status: string;
+  created_at: string;
+}
+
+export interface GeneratedVideo {
+  id: string;
+  storyboard_id: string;
+  video_url: string | null;
+  status: string;
+  created_at: string;
+}

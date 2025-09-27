@@ -5,9 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Edit3, Trash2, Check, AlertTriangle } from "lucide-react";
-import { Script } from "@/types";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, ExternalLink, Edit3, Trash2, Check, AlertTriangle, Play } from "lucide-react";
+import { Script, GeneratedVideo } from "@/types";
 import { useAccount } from "@/hooks/useAccount";
+import { useVideoGenerator } from "@/hooks/useVideoGenerator";
+import TikTokGenerator from "@/components/video-generator/TikTokGenerator";
 
 const AccountDetails = () => {
   const navigate = useNavigate();
@@ -16,6 +19,10 @@ const AccountDetails = () => {
   const { account, loading, updateAccount } = useAccount(accountId || "");
   const [editingScript, setEditingScript] = useState<string | null>(null);
   const [editingScriptContent, setEditingScriptContent] = useState("");
+  const [selectedVideo, setSelectedVideo] = useState<GeneratedVideo | null>(null);
+
+  // Hook pour récupérer les vidéos générées
+  const { data: generatedVideos = [], isLoading: isLoadingVideos } = useVideoGenerator().fetchGeneratedVideos(accountId || "");
 
   if (loading) {
     return <div className="min-h-screen bg-background p-6 flex items-center justify-center">
@@ -158,6 +165,117 @@ const AccountDetails = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* TikTok Video Generator */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Générateur de Vidéo TikTok</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TikTokGenerator accountId={accountId || ""} />
+              </CardContent>
+            </Card>
+
+            {/* Generated Videos */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Vidéos Générées</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingVideos ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : generatedVideos.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>Aucune vidéo générée pour le moment</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {generatedVideos.map((video) => (
+                      <div 
+                        key={video.id} 
+                        className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => setSelectedVideo(video)}
+                      >
+                        <div className="relative">
+                          {video.video_url ? (
+                            <div className="aspect-video bg-gray-200 flex items-center justify-center">
+                              <video 
+                                src={video.video_url} 
+                                className="w-full h-full object-cover"
+                                muted
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                <Play className="h-12 w-12 text-white" />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="aspect-video bg-gray-200 flex items-center justify-center">
+                              <div className="text-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                                <p className="text-xs text-gray-500">Génération en cours</p>
+                              </div>
+                            </div>
+                          )}
+                          <div className="p-2 bg-secondary">
+                            <div className="text-xs font-medium truncate">
+                              {new Date(video.created_at).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs capitalize">
+                              <Badge variant="outline">{video.status}</Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Dialog for video preview */}
+            <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Vidéo</DialogTitle>
+                </DialogHeader>
+                {selectedVideo && (
+                  <div className="flex flex-col items-center">
+                    {selectedVideo.video_url ? (
+                      <video 
+                        src={selectedVideo.video_url} 
+                        controls 
+                        className="w-full max-h-[70vh] object-contain"
+                      />
+                    ) : (
+                      <div className="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                          <p className="text-gray-500">Vidéo en cours de génération...</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-4 w-full">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-muted-foreground">
+                          Créée le: {new Date(selectedVideo.created_at).toLocaleString()}
+                        </span>
+                        <Badge variant="outline" className="capitalize">
+                          {selectedVideo.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
             {/* Scripts en attente */}
             <Card>
