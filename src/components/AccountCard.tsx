@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Calendar, TrendingUp } from "lucide-react";
 import { TikTokAccount } from "@/types";
+import { getProfilePictureUrl } from "@/lib/supabase-storage";
 
 interface AccountCardProps {
   account: TikTokAccount;
@@ -36,9 +37,16 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
         {/* Profile Image */}
         <div className="relative mx-auto mb-4 w-fit">
           <img 
-            src={account.photo_url || account.image_url || "/placeholder.svg"} 
+            src={getProfilePictureUrl(account)} 
             alt={account.nom}
             className="w-20 h-20 rounded-full object-cover border-3 border-gradient-primary shadow-lg group-hover:scale-110 transition-transform duration-300"
+            onError={(e) => {
+              // Fallback to existing URLs if storage image fails to load
+              const target = e.target as HTMLImageElement;
+              if (target.src.includes('supabase.co')) {
+                target.src = account.photo_url || account.image_url || "/placeholder.svg";
+              }
+            }}
           />
           {isActive && (
             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full border-2 border-background flex items-center justify-center">
