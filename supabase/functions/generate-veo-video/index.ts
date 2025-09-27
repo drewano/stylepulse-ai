@@ -21,16 +21,13 @@ interface VeoResponse {
   name: string;
   done?: boolean;
   response?: {
-    candidates: Array<{
-      content: {
-        parts: Array<{
-          fileData?: {
-            fileUri: string;
-            mimeType: string;
-          };
-        }>;
-      };
-    }>;
+    generateVideoResponse?: {
+      generatedSamples?: Array<{
+        video?: {
+          uri: string;
+        };
+      }>;
+    };
   };
   error?: {
     code: number;
@@ -50,18 +47,22 @@ function safeParseJson(text: string): any {
   }
 }
 
-// Poll operation status
+// Poll operation status with correct API format for VEO 3
 async function pollOperationStatus(operationName: string): Promise<VeoResponse> {
-  const maxAttempts = 60; // 5 minutes with 5-second intervals
+  const maxAttempts = 60; // 10 minutes with 10-second intervals
   let attempts = 0;
+
+  if (!geminiApiKey) {
+    throw new Error('GEMINI_API_KEY not configured');
+  }
 
   while (attempts < maxAttempts) {
     console.log(`Polling attempt ${attempts + 1}/${maxAttempts} for operation: ${operationName}`);
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/${operationName}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${operationName}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${geminiApiKey}`,
+        'x-goog-api-key': geminiApiKey,
         'Content-Type': 'application/json',
       },
     });
@@ -87,21 +88,25 @@ async function pollOperationStatus(operationName: string): Promise<VeoResponse> 
 
     attempts++;
     if (attempts < maxAttempts) {
-      console.log('Operation still processing, waiting 5 seconds...');
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      console.log('Operation still processing, waiting 10 seconds...');
+      await new Promise(resolve => setTimeout(resolve, 10000)); // 10 seconds like in docs
     }
   }
 
-  throw new Error('Video generation timed out after 5 minutes');
+  throw new Error('Video generation timed out after 10 minutes');
 }
 
-// Download video from Google AI
+// Download video from Google AI with correct API key format
 async function downloadVideo(fileUri: string): Promise<Uint8Array> {
   console.log('Downloading video from:', fileUri);
   
+  if (!geminiApiKey) {
+    throw new Error('GEMINI_API_KEY not configured');
+  }
+  
   const response = await fetch(fileUri, {
     headers: {
-      'Authorization': `Bearer ${geminiApiKey}`,
+      'x-goog-api-key': geminiApiKey,
     },
   });
 
@@ -156,22 +161,26 @@ serve(async (req) => {
     );
   }
 
+  // Declare requestData outside try block to access in catch
+  let requestData: GenerateVideoRequest | undefined;
+  
   try {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Parse request body safely
+    // Parse request body safely - store it first to avoid "body already consumed"
     const requestText = await req.text();
     if (!requestText.trim()) {
       throw new Error('Empty request body');
     }
 
-    const requestData: GenerateVideoRequest = safeParseJson(requestText);
-    const { scriptId, prompt } = requestData;
-
-    if (!scriptId || !prompt) {
+    requestData = safeParseJson(requestText);
+    
+    if (!requestData || !requestData.scriptId || !requestData.prompt) {
       throw new Error('Missing required fields: scriptId and prompt');
     }
+    
+    const { scriptId, prompt } = requestData;
 
     console.log('Starting video generation for script:', scriptId);
     console.log('Prompt:', prompt.substring(0, 100) + '...');
@@ -189,28 +198,22 @@ serve(async (req) => {
       console.error('Failed to update video status:', updateError);
     }
 
-    // Step 1: Generate video with VEO 3
+    // Step 1: Generate video with VEO 3 using correct REST API format
     console.log('Calling VEO 3 API...');
     const veoRequest = {
-      contents: [{
-        parts: [{
-          text: `Create a short, engaging TikTok-style video based on this script: ${prompt}. 
+      instances: [{
+        prompt: `Create a short, engaging TikTok-style video based on this script: ${prompt}. 
                  Make it dynamic, visually interesting, and suitable for social media. 
                  Duration: 5-10 seconds. Style: Modern, energetic, professional yet fun.`
-        }]
-      }],
-      generationConfig: {
-        responseModalities: ["VIDEO"],
-        aspectRatio: "16:9"
-      }
+      }]
     };
 
     const veoResponse = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/veo-3:generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/veo-3.0-generate-001:predictLongRunning',
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${geminiApiKey}`,
+          'x-goog-api-key': geminiApiKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(veoRequest),
@@ -236,20 +239,18 @@ serve(async (req) => {
     // Step 2: Poll for completion
     const completedResult = await pollOperationStatus(veoResult.name);
 
-    // Step 3: Extract video URL
-    const candidate = completedResult.response?.candidates?.[0];
-    const videoPart = candidate?.content?.parts?.[0];
-    const fileUri = videoPart?.fileData?.fileUri;
+    // Step 3: Extract video URL using correct VEO 3 response structure
+    const videoUri = completedResult.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
 
-    if (!fileUri) {
-      console.error('No video file URI in response:', JSON.stringify(completedResult, null, 2));
-      throw new Error('No video generated - missing file URI in response');
+    if (!videoUri) {
+      console.error('No video URI in response:', JSON.stringify(completedResult, null, 2));
+      throw new Error('No video generated - missing video URI in response');
     }
 
-    console.log('Video generated successfully, file URI:', fileUri);
+    console.log('Video generated successfully, video URI:', videoUri);
 
     // Step 4: Download video
-    const videoData = await downloadVideo(fileUri);
+    const videoData = await downloadVideo(videoUri);
     console.log('Video downloaded, size:', videoData.length, 'bytes');
 
     // Step 5: Upload to Supabase Storage
@@ -293,8 +294,7 @@ serve(async (req) => {
     
     // Try to update video status to error if we have the script ID
     try {
-      const requestData = safeParseJson(await req.text());
-      if (requestData.scriptId && supabaseUrl && supabaseServiceKey) {
+      if (requestData?.scriptId && supabaseUrl && supabaseServiceKey) {
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
         await supabase
           .from('videos')
