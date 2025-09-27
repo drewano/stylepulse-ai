@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Edit3, Trash2, Check, AlertTriangle, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Edit3, Trash2, Check, AlertTriangle, Plus, Loader2, Video } from "lucide-react";
 import { Script } from "@/types";
 import { useAccount } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ const AccountDetails = () => {
   const [scripts, setScripts] = useState<Script[]>([]);
   const [loadingScripts, setLoadingScripts] = useState(true);
   const [generatingScript, setGeneratingScript] = useState(false);
+  const [generatingVideo, setGeneratingVideo] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadScripts = async () => {
@@ -232,6 +233,50 @@ const AccountDetails = () => {
     }
   };
 
+  const handleGenerateVideo = async (script: Script) => {
+    if (!script.content) return;
+
+    setGeneratingVideo(script.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-veo-video', {
+        body: { prompt: script.content }
+      });
+
+      if (error) {
+        console.error('Error generating video:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de générer la vidéo",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Video generation result:', data);
+      toast({
+        title: "Vidéo générée",
+        description: "La vidéo a été générée avec succès",
+        duration: 5000,
+      });
+
+      // Ici vous pouvez traiter la réponse de l'API (URL de la vidéo, etc.)
+      if (data?.video?.uri) {
+        // Si l'API renvoie un lien direct vers la vidéo
+        window.open(data.video.uri, '_blank');
+      }
+
+    } catch (error) {
+      console.error('Error generating video:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer la vidéo",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingVideo(null);
+    }
+  };
+
   const nonValidatedScripts = scripts.filter(script => !script.isValidated);
   const showAlert = nonValidatedScripts.length < 20;
 
@@ -405,34 +450,54 @@ const AccountDetails = () => {
                         <>
                           <p className="text-sm mb-3">{script.content}</p>
                           <div className="flex items-center justify-between">
-                            <div className="flex space-x-2">
-                              {!script.isValidated && (
-                                <Button 
-                                  size="sm" 
-                                  onClick={() => handleValidateScript(script.id)}
-                                  className="bg-gradient-primary"
-                                >
-                                  <Check className="h-4 w-4 mr-1" />
-                                  Valider
-                                </Button>
-                              )}
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => handleEditScript(script)}
-                              >
-                                <Edit3 className="h-4 w-4 mr-1" />
-                                Modifier
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="destructive"
-                                onClick={() => handleDeleteScript(script.id)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Supprimer
-                              </Button>
-                            </div>
+                             <div className="flex space-x-2">
+                               {!script.isValidated && (
+                                 <Button 
+                                   size="sm" 
+                                   onClick={() => handleValidateScript(script.id)}
+                                   className="bg-gradient-primary"
+                                 >
+                                   <Check className="h-4 w-4 mr-1" />
+                                   Valider
+                                 </Button>
+                               )}
+                               {script.isValidated && (
+                                 <Button 
+                                   size="sm" 
+                                   onClick={() => handleGenerateVideo(script)}
+                                   disabled={generatingVideo === script.id}
+                                   className="bg-gradient-primary"
+                                 >
+                                   {generatingVideo === script.id ? (
+                                     <>
+                                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                       Génération...
+                                     </>
+                                   ) : (
+                                     <>
+                                       <Video className="h-4 w-4 mr-1" />
+                                       Générer vidéo
+                                     </>
+                                   )}
+                                 </Button>
+                               )}
+                               <Button 
+                                 size="sm" 
+                                 variant="outline"
+                                 onClick={() => handleEditScript(script)}
+                               >
+                                 <Edit3 className="h-4 w-4 mr-1" />
+                                 Modifier
+                               </Button>
+                               <Button 
+                                 size="sm" 
+                                 variant="destructive"
+                                 onClick={() => handleDeleteScript(script.id)}
+                               >
+                                 <Trash2 className="h-4 w-4 mr-1" />
+                                 Supprimer
+                               </Button>
+                             </div>
                             {script.isValidated && (
                               <Badge className="bg-success text-success-foreground">
                                 Validé
