@@ -14,199 +14,209 @@ export type Database = {
   }
   public: {
     Tables: {
-      generated_content: {
+      comptes: {
         Row: {
-          created_at: string
-          id: string
-          media_url: string | null
-          scheduled_at: string | null
-          social_account_id: string
-          status: string
-          text_content: string | null
-          type: string
-          updated_at: string
+          entreprise_id: number | null
+          id: number
+          image_url: string | null
+          lien_tiktok: string | null
+          nom: string
+          personnalite: string | null
+          photo_url: string | null
+          prompt: string | null
+          vues_totales: number | null
         }
         Insert: {
-          created_at?: string
-          id?: string
-          media_url?: string | null
-          scheduled_at?: string | null
-          social_account_id: string
-          status?: string
-          text_content?: string | null
-          type: string
-          updated_at?: string
+          entreprise_id?: number | null
+          id?: number
+          image_url?: string | null
+          lien_tiktok?: string | null
+          nom: string
+          personnalite?: string | null
+          photo_url?: string | null
+          prompt?: string | null
+          vues_totales?: number | null
         }
         Update: {
-          created_at?: string
-          id?: string
-          media_url?: string | null
-          scheduled_at?: string | null
-          social_account_id?: string
-          status?: string
-          text_content?: string | null
-          type?: string
-          updated_at?: string
+          entreprise_id?: number | null
+          id?: number
+          image_url?: string | null
+          lien_tiktok?: string | null
+          nom?: string
+          personnalite?: string | null
+          photo_url?: string | null
+          prompt?: string | null
+          vues_totales?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "generated_content_social_account_id_fkey"
-            columns: ["social_account_id"]
+            foreignKeyName: "comptes_entreprise_id_fkey"
+            columns: ["entreprise_id"]
             isOneToOne: false
-            referencedRelation: "social_accounts"
+            referencedRelation: "entreprise"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entreprise: {
+        Row: {
+          description: string | null
+          id: number
+          nom: string
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          nom: string
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          nom?: string
+        }
+        Relationships: []
+      }
+      posts: {
+        Row: {
+          compte_id: number
+          date_publication: string | null
+          id: number
+          likes: number | null
+          replies: number | null
+          script_text: string
+          vues: number | null
+        }
+        Insert: {
+          compte_id: number
+          date_publication?: string | null
+          id?: number
+          likes?: number | null
+          replies?: number | null
+          script_text: string
+          vues?: number | null
+        }
+        Update: {
+          compte_id?: number
+          date_publication?: string | null
+          id?: number
+          likes?: number | null
+          replies?: number | null
+          script_text?: string
+          vues?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_compte_id_fkey"
+            columns: ["compte_id"]
+            isOneToOne: false
+            referencedRelation: "comptes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scripts: {
+        Row: {
+          compte_id: number
+          date_creation: string | null
+          id: number
+          script_text: string
+          statut: string | null
+        }
+        Insert: {
+          compte_id: number
+          date_creation?: string | null
+          id?: number
+          script_text: string
+          statut?: string | null
+        }
+        Update: {
+          compte_id?: number
+          date_creation?: string | null
+          id?: number
+          script_text?: string
+          statut?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scripts_compte_id_fkey"
+            columns: ["compte_id"]
+            isOneToOne: false
+            referencedRelation: "comptes"
             referencedColumns: ["id"]
           },
         ]
       }
       social_accounts: {
         Row: {
-          created_at: string
+          created_at: string | null
           days_in_internship: number | null
           id: string
           personality: string | null
-          platform: string
+          platform: string | null
           profile_picture_url: string | null
           prompt: string | null
-          style_guide_id: string | null
           tiktok_url: string | null
           total_views: number | null
+          updated_at: string | null
           username: string
-          workspace_id: string
+          workspace_id: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           days_in_internship?: number | null
           id?: string
           personality?: string | null
-          platform: string
+          platform?: string | null
           profile_picture_url?: string | null
           prompt?: string | null
-          style_guide_id?: string | null
           tiktok_url?: string | null
           total_views?: number | null
+          updated_at?: string | null
           username: string
-          workspace_id: string
+          workspace_id?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           days_in_internship?: number | null
           id?: string
           personality?: string | null
-          platform?: string
+          platform?: string | null
           profile_picture_url?: string | null
           prompt?: string | null
-          style_guide_id?: string | null
           tiktok_url?: string | null
           total_views?: number | null
+          updated_at?: string | null
           username?: string
-          workspace_id?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "social_accounts_style_guide_id_fkey"
-            columns: ["style_guide_id"]
-            isOneToOne: false
-            referencedRelation: "style_guides"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "social_accounts_workspace_id_fkey"
+            foreignKeyName: "fk_social_accounts_workspace"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
-      }
-      style_guides: {
-        Row: {
-          created_at: string
-          fonts: Json | null
-          id: string
-          name: string
-          primary_colors: Json | null
-          tone_of_voice: string | null
-          updated_at: string
-          workspace_id: string
-        }
-        Insert: {
-          created_at?: string
-          fonts?: Json | null
-          id?: string
-          name?: string
-          primary_colors?: Json | null
-          tone_of_voice?: string | null
-          updated_at?: string
-          workspace_id: string
-        }
-        Update: {
-          created_at?: string
-          fonts?: Json | null
-          id?: string
-          name?: string
-          primary_colors?: Json | null
-          tone_of_voice?: string | null
-          updated_at?: string
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "style_guides_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      trends: {
-        Row: {
-          description: string | null
-          detected_at: string
-          hashtags: Json | null
-          id: string
-          platform: string
-          title: string
-        }
-        Insert: {
-          description?: string | null
-          detected_at?: string
-          hashtags?: Json | null
-          id?: string
-          platform: string
-          title: string
-        }
-        Update: {
-          description?: string | null
-          detected_at?: string
-          hashtags?: Json | null
-          id?: string
-          platform?: string
-          title?: string
-        }
-        Relationships: []
       }
       workspaces: {
         Row: {
-          created_at: string
-          description: string | null
+          created_at: string | null
           id: string
           name: string
-          owner_id: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          owner_id: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
+          created_at?: string | null
           id?: string
           name?: string
-          owner_id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
