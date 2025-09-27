@@ -200,6 +200,13 @@ export type Database = {
             referencedRelation: "comptes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "videos_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "scripts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       videos_backup: {
