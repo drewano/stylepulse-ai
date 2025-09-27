@@ -34,9 +34,9 @@ export const getProfilePictureUrl = (account: {
       return storageUrl;
     }
     
-    // Special case for "Gorilla" account - use gorilla.jpeg
+    // Special case for "Gorilla" account - use gorilla.jpg
     if (account.nom.toLowerCase().includes('gorilla')) {
-      const profilePicturePath = 'gorilla.jpeg';
+      const profilePicturePath = 'gorilla.jpg';
       const storageUrl = getPublicUrl("Profil pictures", profilePicturePath);
       return storageUrl;
     }
