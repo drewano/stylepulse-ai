@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Plus } from "lucide-react";
 import AccountCard from "@/components/AccountCard";
 import { Company, TikTokAccount } from "@/types";
 
@@ -51,9 +55,48 @@ const Index = () => {
     name: "TechStart Studio",
     description: "Agence digitale spécialisée dans la création de contenu IA pour les réseaux sociaux. Nous développons des personnages virtuels authentiques qui engagent votre audience."
   });
+  
+  const [accounts, setAccounts] = useState<TikTokAccount[]>(mockAccounts);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newAccount, setNewAccount] = useState<Partial<TikTokAccount>>({
+    name: "",
+    prompt: "",
+    personality: "",
+    tikTokUrl: "",
+    profileImage: "/placeholder.svg"
+  });
 
   const handleAccountClick = (accountId: string) => {
     navigate(`/account/${accountId}`);
+  };
+
+  const handleAddAccount = () => {
+    if (!newAccount.name || !newAccount.prompt || !newAccount.personality) {
+      return;
+    }
+
+    const account: TikTokAccount = {
+      id: Date.now().toString(),
+      name: newAccount.name,
+      prompt: newAccount.prompt,
+      personality: newAccount.personality,
+      profileImage: newAccount.profileImage || "/placeholder.svg",
+      tikTokUrl: newAccount.tikTokUrl || "",
+      daysInInternship: 0,
+      totalViews: 0,
+      pendingScripts: [],
+      publishedPosts: []
+    };
+
+    setAccounts(prev => [...prev, account]);
+    setNewAccount({
+      name: "",
+      prompt: "",
+      personality: "",
+      tikTokUrl: "",
+      profileImage: "/placeholder.svg"
+    });
+    setIsAddDialogOpen(false);
   };
 
   return (
@@ -88,12 +131,88 @@ const Index = () => {
 
         {/* Accounts Grid */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">
-            Comptes TikTok ({mockAccounts.length})
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              Comptes TikTok ({accounts.length})
+            </h2>
+            
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-primary">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter un compte
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Nouveau compte TikTok</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nom du personnage*</Label>
+                    <Input
+                      id="name"
+                      value={newAccount.name}
+                      onChange={(e) => setNewAccount(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Ex: Sophie Martin"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="prompt">Prompt du personnage*</Label>
+                    <Textarea
+                      id="prompt"
+                      value={newAccount.prompt}
+                      onChange={(e) => setNewAccount(prev => ({ ...prev, prompt: e.target.value }))}
+                      placeholder="Ex: Créer du contenu sur les tendances tech pour les jeunes professionnels"
+                      className="min-h-20"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="personality">Personnalité*</Label>
+                    <Textarea
+                      id="personality"
+                      value={newAccount.personality}
+                      onChange={(e) => setNewAccount(prev => ({ ...prev, personality: e.target.value }))}
+                      placeholder="Ex: Dynamique, passionnée par l'innovation, pédagogue"
+                      className="min-h-20"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="tiktokUrl">URL TikTok (optionnel)</Label>
+                    <Input
+                      id="tiktokUrl"
+                      value={newAccount.tikTokUrl}
+                      onChange={(e) => setNewAccount(prev => ({ ...prev, tikTokUrl: e.target.value }))}
+                      placeholder="https://tiktok.com/@username"
+                    />
+                  </div>
+                  
+                  <div className="flex space-x-2 pt-4">
+                    <Button 
+                      onClick={handleAddAccount}
+                      className="flex-1 bg-gradient-primary"
+                      disabled={!newAccount.name || !newAccount.prompt || !newAccount.personality}
+                    >
+                      Créer le compte
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsAddDialogOpen(false)}
+                      className="flex-1"
+                    >
+                      Annuler
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {mockAccounts.map((account) => (
+            {accounts.map((account) => (
               <AccountCard
                 key={account.id}
                 account={account}
