@@ -185,18 +185,23 @@ serve(async (req) => {
     console.log('Starting video generation for script:', scriptId);
     console.log('Prompt:', prompt.substring(0, 100) + '...');
 
-    // Update video status to processing
-    const { error: updateError } = await supabase
+    // Create initial video record in database
+    const { data: videoRecord, error: insertError } = await supabase
       .from('videos')
-      .update({ 
+      .insert({
+        script_id: scriptId,
         status: 'processing',
-        updated_at: new Date().toISOString()
+        gcp_operation_name: 'pending'
       })
-      .eq('script_id', scriptId);
+      .select()
+      .single();
 
-    if (updateError) {
-      console.error('Failed to update video status:', updateError);
+    if (insertError) {
+      console.error('Error creating video record:', insertError);
+      throw new Error(`Failed to create video record: ${insertError.message}`);
     }
+
+    console.log('Video record created:', videoRecord.id);
 
     // Step 1: Generate video with VEO 3 using correct REST API format
     console.log('Calling VEO 3 API...');
@@ -223,6 +228,16 @@ serve(async (req) => {
     if (!veoResponse.ok) {
       const errorText = await veoResponse.text();
       console.error(`VEO API error (${veoResponse.status}):`, errorText);
+      
+      // Update video record with error
+      await supabase
+        .from('videos')
+        .update({
+          status: 'failed',
+          error_message: `VEO API error: ${veoResponse.status} - ${errorText}`
+        })
+        .eq('id', videoRecord.id);
+      
       throw new Error(`VEO API failed: ${veoResponse.status} ${errorText}`);
     }
 
@@ -231,10 +246,28 @@ serve(async (req) => {
 
     if (veoResult.error) {
       console.error('VEO API returned error:', veoResult.error);
+      
+      // Update video record with error
+      await supabase
+        .from('videos')
+        .update({
+          status: 'failed',
+          error_message: `VEO generation failed: ${veoResult.error.message}`
+        })
+        .eq('id', videoRecord.id);
+      
       throw new Error(`VEO generation failed: ${veoResult.error.message}`);
     }
 
     console.log('VEO API response received, operation name:', veoResult.name);
+
+    // Update video record with operation name
+    await supabase
+      .from('videos')
+      .update({
+        gcp_operation_name: veoResult.name
+      })
+      .eq('id', videoRecord.id);
 
     // Step 2: Poll for completion
     const completedResult = await pollOperationStatus(veoResult.name);
@@ -244,6 +277,16 @@ serve(async (req) => {
 
     if (!videoUri) {
       console.error('No video URI in response:', JSON.stringify(completedResult, null, 2));
+      
+      // Update video record with error
+      await supabase
+        .from('videos')
+        .update({
+          status: 'failed',
+          error_message: 'No video generated - missing video URI in response'
+        })
+        .eq('id', videoRecord.id);
+      
       throw new Error('No video generated - missing video URI in response');
     }
 
@@ -263,10 +306,9 @@ serve(async (req) => {
       .update({ 
         status: 'completed',
         video_url: publicUrl,
-        updated_at: new Date().toISOString(),
-        gcp_operation_name: veoResult.name
+        updated_at: new Date().toISOString()
       })
-      .eq('script_id', scriptId);
+      .eq('id', videoRecord.id);
 
     if (finalUpdateError) {
       console.error('Failed to update video with final URL:', finalUpdateError);
@@ -279,6 +321,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         videoUrl: publicUrl,
+        videoId: videoRecord.id,
         operationName: veoResult.name,
         message: 'Video generated and uploaded successfully'
       }),
@@ -292,18 +335,23 @@ serve(async (req) => {
     
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
-    // Try to update video status to error if we have the script ID
+    // Try to update video status to error if we have the video record
     try {
-      if (requestData?.scriptId && supabaseUrl && supabaseServiceKey) {
+      if (supabaseUrl && supabaseServiceKey) {
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
-        await supabase
-          .from('videos')
-          .update({ 
-            status: 'error',
-            error_message: errorMessage,
-            updated_at: new Date().toISOString()
-          })
-          .eq('script_id', requestData.scriptId);
+        
+        // Try to find and update any processing video records for this script
+        if (requestData?.scriptId) {
+          await supabase
+            .from('videos')
+            .update({ 
+              status: 'failed',
+              error_message: errorMessage,
+              updated_at: new Date().toISOString()
+            })
+            .eq('script_id', requestData.scriptId)
+            .eq('status', 'processing');
+        }
       }
     } catch (updateError) {
       console.error('Failed to update error status:', updateError);

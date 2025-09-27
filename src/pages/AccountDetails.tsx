@@ -307,8 +307,9 @@ const AccountDetails = () => {
         window.open(data.videoUrl, '_blank');
       }
 
-      // Refresh the scripts to show updated video status
+      // Refresh the scripts and videos to show updated status
       loadScripts();
+      loadVideos();
 
     } catch (error) {
       console.error('Error generating video:', error);
