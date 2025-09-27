@@ -22,6 +22,8 @@ const AccountDetails = () => {
   const [loadingScripts, setLoadingScripts] = useState(true);
   const [generatingScript, setGeneratingScript] = useState(false);
   const [generatingVideo, setGeneratingVideo] = useState<string | null>(null);
+  const [videos, setVideos] = useState<any[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(true);
   const { toast } = useToast();
 
   const loadScripts = async () => {
@@ -63,10 +65,47 @@ const AccountDetails = () => {
     }
   };
 
-  // Single useEffect to load scripts
+  const loadVideos = async () => {
+    try {
+      setLoadingVideos(true);
+      const { data, error } = await supabase
+        .from('videos')
+        .select(`
+          *,
+          scripts!inner(compte_id, script_text)
+        `)
+        .eq('scripts.compte_id', parseInt(accountId || "0"))
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading videos:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les vidéos",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setVideos(data || []);
+    } catch (error) {
+      console.error('Error loading videos:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les vidéos",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingVideos(false);
+    }
+  };
+
+  // Load scripts and videos
   useEffect(() => {
     if (accountId) {
       loadScripts();
+      loadVideos();
     }
   }, [accountId]);
 
@@ -519,15 +558,77 @@ const AccountDetails = () => {
               </CardContent>
             </Card>
 
-            {/* Posts publiés - placeholder for now */}
+            {/* Posts publiés */}
             <Card>
               <CardHeader>
                 <CardTitle>Posts publiés</CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  {videos.length} vidéo{videos.length > 1 ? 's' : ''} générée{videos.length > 1 ? 's' : ''}
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-center text-muted-foreground py-8">
-                  <p>Fonctionnalité en cours de développement</p>
-                </div>
+                {loadingVideos ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                    <p>Chargement des vidéos...</p>
+                  </div>
+                ) : videos.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Aucune vidéo générée pour le moment</p>
+                    <p className="text-sm mt-2">Validez et générez des vidéos à partir de vos scripts</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {videos.map((video) => (
+                      <div key={video.id} className="border rounded-lg overflow-hidden bg-card">
+                        <div className="aspect-video bg-muted relative">
+                          {video.video_url ? (
+                            <video 
+                              controls 
+                              className="w-full h-full object-cover"
+                              poster=""
+                            >
+                              <source src={video.video_url} type="video/mp4" />
+                              Votre navigateur ne supporte pas la lecture vidéo.
+                            </video>
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="text-center">
+                                <Video className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                                <p className="text-sm text-muted-foreground">Vidéo en cours de traitement</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <div className="text-sm text-muted-foreground mb-2">
+                            {new Date(video.created_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </div>
+                          <p className="text-sm line-clamp-3">
+                            {video.scripts?.script_text || 'Script indisponible'}
+                          </p>
+                          {video.video_url && (
+                            <div className="flex space-x-2 mt-3">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(video.video_url, '_blank')}
+                              >
+                                <ExternalLink className="h-4 w-4 mr-1" />
+                                Ouvrir
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
