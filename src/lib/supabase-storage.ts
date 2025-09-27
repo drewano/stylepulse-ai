@@ -34,6 +34,13 @@ export const getProfilePictureUrl = (account: {
       return storageUrl;
     }
     
+    // Special case for "Gorilla" account - use gorilla.jpeg
+    if (account.nom.toLowerCase().includes('gorilla')) {
+      const profilePicturePath = 'gorilla.jpeg';
+      const storageUrl = getPublicUrl("Profil pictures", profilePicturePath);
+      return storageUrl;
+    }
+    
     // Convert account name to lowercase and remove special characters for file name
     const fileName = account.nom.toLowerCase().replace(/[^a-z0-9]/g, '');
     const profilePicturePath = `${fileName}`;
