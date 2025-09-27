@@ -6,57 +6,50 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ExternalLink, Edit3, Trash2, Check, AlertTriangle } from "lucide-react";
-import { TikTokAccount, Script } from "@/types";
-
-// Mock data - à remplacer par des données réelles
-const mockAccount: TikTokAccount = {
-  id: "1",
-  name: "Sophie Martin",
-  prompt: "Créer du contenu sur les tendances tech pour les jeunes professionnels",
-  personality: "Dynamique, passionnée par l'innovation, pédagogue et accessible",
-  profileImage: "/placeholder.svg",
-  daysInInternship: 15,
-  tikTokUrl: "https://tiktok.com/@sophietech",
-  totalViews: 125000,
-  pendingScripts: [
-    { id: "1", content: "Top 5 des apps IA révolutionnaires en 2024", isValidated: false, createdAt: new Date() },
-    { id: "2", content: "Pourquoi ChatGPT va changer ton travail", isValidated: false, createdAt: new Date() },
-  ],
-  publishedPosts: [
-    { 
-      id: "1", 
-      script: "Les nouveautés tech qui vont exploser", 
-      publishedAt: new Date("2024-01-15"), 
-      views: 45000, 
-      likes: 3200, 
-      comments: 156, 
-      shares: 89 
-    },
-  ]
-};
+import { Script } from "@/types";
+import { useAccount } from "@/hooks/useAccount";
 
 const AccountDetails = () => {
   const navigate = useNavigate();
   const { accountId } = useParams();
   
-  const [account, setAccount] = useState<TikTokAccount>(mockAccount);
+  const { account, loading, updateAccount } = useAccount(accountId || "");
   const [editingScript, setEditingScript] = useState<string | null>(null);
   const [editingScriptContent, setEditingScriptContent] = useState("");
 
+  if (loading) {
+    return <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p>Chargement...</p>
+      </div>
+    </div>;
+  }
+
+  if (!account) {
+    return <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-xl font-bold mb-2">Compte introuvable</h1>
+        <Button onClick={() => navigate("/")} variant="outline">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour
+        </Button>
+      </div>
+    </div>;
+  }
+
+  // Mock data for scripts - will be replaced with actual data later
+  const mockScripts: Script[] = [
+    { id: "1", content: "Top 5 des apps IA révolutionnaires en 2024", isValidated: false, createdAt: new Date() },
+    { id: "2", content: "Pourquoi ChatGPT va changer ton travail", isValidated: false, createdAt: new Date() },
+  ];
+
   const handleValidateScript = (scriptId: string) => {
-    setAccount(prev => ({
-      ...prev,
-      pendingScripts: prev.pendingScripts.map(script =>
-        script.id === scriptId ? { ...script, isValidated: true } : script
-      )
-    }));
+    // TODO: Implement with real Supabase data
   };
 
   const handleDeleteScript = (scriptId: string) => {
-    setAccount(prev => ({
-      ...prev,
-      pendingScripts: prev.pendingScripts.filter(script => script.id !== scriptId)
-    }));
+    // TODO: Implement with real Supabase data
   };
 
   const handleEditScript = (script: Script) => {
@@ -65,22 +58,16 @@ const AccountDetails = () => {
   };
 
   const handleSaveScript = (scriptId: string) => {
-    setAccount(prev => ({
-      ...prev,
-      pendingScripts: prev.pendingScripts.map(script =>
-        script.id === scriptId ? { ...script, content: editingScriptContent } : script
-      )
-    }));
+    // TODO: Implement with real Supabase data
     setEditingScript(null);
   };
 
-  const nonValidatedScripts = account.pendingScripts.filter(script => !script.isValidated);
+  const nonValidatedScripts = mockScripts.filter(script => !script.isValidated);
   const showAlert = nonValidatedScripts.length < 20;
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex items-center space-x-4">
           <Button 
             variant="ghost" 
@@ -90,7 +77,7 @@ const AccountDetails = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
-          <h1 className="text-3xl font-bold">{account.name}</h1>
+          <h1 className="text-3xl font-bold">{account.username}</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -102,8 +89,8 @@ const AccountDetails = () => {
             <CardContent className="space-y-4">
               <div className="text-center">
                 <img 
-                  src={account.profileImage} 
-                  alt={account.name}
+                  src={account.profile_picture_url || "/placeholder.svg"} 
+                  alt={account.username}
                   className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-border"
                 />
                 <Button variant="outline" size="sm">
@@ -114,19 +101,19 @@ const AccountDetails = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Nom</label>
                 <Input 
-                  value={account.name}
-                  onChange={(e) => setAccount(prev => ({ ...prev, name: e.target.value }))}
+                  value={account.username}
+                  onChange={(e) => updateAccount({ username: e.target.value })}
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Jours de stage</label>
-                <div className="text-2xl font-bold text-primary">{account.daysInInternship}</div>
+                <div className="text-2xl font-bold text-primary">{account.days_in_internship}</div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Vues totales</label>
-                <div className="text-2xl font-bold text-accent">{account.totalViews.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-accent">{account.total_views.toLocaleString()}</div>
               </div>
 
               <div className="space-y-2">
@@ -134,7 +121,8 @@ const AccountDetails = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-between"
-                  onClick={() => window.open(account.tikTokUrl, '_blank')}
+                  onClick={() => account.tiktok_url && window.open(account.tiktok_url, '_blank')}
+                  disabled={!account.tiktok_url}
                 >
                   Voir le compte
                   <ExternalLink className="h-4 w-4" />
@@ -154,8 +142,8 @@ const AccountDetails = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Prompt du personnage</label>
                   <Textarea 
-                    value={account.prompt}
-                    onChange={(e) => setAccount(prev => ({ ...prev, prompt: e.target.value }))}
+                    value={account.prompt || ""}
+                    onChange={(e) => updateAccount({ prompt: e.target.value })}
                     className="min-h-20"
                   />
                 </div>
@@ -163,8 +151,8 @@ const AccountDetails = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Personnalité</label>
                   <Textarea 
-                    value={account.personality}
-                    onChange={(e) => setAccount(prev => ({ ...prev, personality: e.target.value }))}
+                    value={account.personality || ""}
+                    onChange={(e) => updateAccount({ personality: e.target.value })}
                     className="min-h-20"
                   />
                 </div>
@@ -190,7 +178,7 @@ const AccountDetails = () => {
                 )}
 
                 <div className="max-h-96 overflow-y-auto space-y-3">
-                  {account.pendingScripts.map((script) => (
+                  {mockScripts.map((script) => (
                     <div 
                       key={script.id} 
                       className={`p-4 rounded-lg border ${script.isValidated ? 'bg-success/10 border-success/30' : 'bg-card'}`}
@@ -258,29 +246,14 @@ const AccountDetails = () => {
               </CardContent>
             </Card>
 
-            {/* Posts publiés */}
+            {/* Posts publiés - placeholder for now */}
             <Card>
               <CardHeader>
                 <CardTitle>Posts publiés</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {account.publishedPosts.map((post) => (
-                    <div key={post.id} className="p-4 rounded-lg border bg-card">
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="text-sm font-medium">{post.script}</p>
-                        <span className="text-xs text-muted-foreground">
-                          {post.publishedAt.toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="flex space-x-4 text-xs text-muted-foreground">
-                        <span>{post.views.toLocaleString()} vues</span>
-                        <span>{post.likes.toLocaleString()} likes</span>
-                        <span>{post.comments} commentaires</span>
-                        <span>{post.shares} partages</span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center text-muted-foreground py-8">
+                  <p>Fonctionnalité en cours de développement</p>
                 </div>
               </CardContent>
             </Card>

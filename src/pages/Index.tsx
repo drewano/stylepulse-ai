@@ -10,101 +10,49 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Building2, FileText, Users, TrendingUp, Eye, Heart } from "lucide-react";
 import AccountCard from "@/components/AccountCard";
 import { Company, TikTokAccount } from "@/types";
-
-// Mock data - à remplacer par des données réelles
-const mockAccounts: TikTokAccount[] = [
-  {
-    id: "1",
-    name: "Sophie Martin",
-    prompt: "Créer du contenu sur les tendances tech",
-    personality: "Dynamique et passionnée par l'innovation",
-    profileImage: "/placeholder.svg",
-    daysInInternship: 15,
-    tikTokUrl: "https://tiktok.com/@sophietech",
-    totalViews: 125000,
-    pendingScripts: [],
-    publishedPosts: []
-  },
-  {
-    id: "2",
-    name: "Lucas Dupont",
-    prompt: "Contenu lifestyle et bien-être",
-    personality: "Zen et inspirant",
-    profileImage: "/placeholder.svg",
-    daysInInternship: 22,
-    tikTokUrl: "https://tiktok.com/@lucaswellness",
-    totalViews: 89000,
-    pendingScripts: [],
-    publishedPosts: []
-  },
-  {
-    id: "3",
-    name: "Emma Rodriguez",
-    prompt: "Mode et beauty tips",
-    personality: "Créative et tendance",
-    profileImage: "/placeholder.svg",
-    daysInInternship: 8,
-    tikTokUrl: "https://tiktok.com/@emmastyle",
-    totalViews: 203000,
-    pendingScripts: [],
-    publishedPosts: []
-  }
-];
+import { useAccounts } from "@/hooks/useAccounts";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { accounts, loading, createAccount } = useAccounts();
   const [company, setCompany] = useState<Company>({
     name: "TechStart Studio",
     description: "Agence digitale spécialisée dans la création de contenu IA pour les réseaux sociaux. Nous développons des personnages virtuels authentiques qui engagent votre audience."
   });
   
-  const [accounts, setAccounts] = useState<TikTokAccount[]>(mockAccounts);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newAccount, setNewAccount] = useState<Partial<TikTokAccount>>({
-    name: "",
+  const [newAccount, setNewAccount] = useState({
+    username: "",
     prompt: "",
     personality: "",
-    tikTokUrl: "",
-    profileImage: "/placeholder.svg"
+    tiktok_url: ""
   });
 
   const handleAccountClick = (accountId: string) => {
     navigate(`/account/${accountId}`);
   };
 
-  const handleAddAccount = () => {
-    if (!newAccount.name || !newAccount.prompt || !newAccount.personality) {
+  const handleAddAccount = async () => {
+    if (!newAccount.username || !newAccount.prompt || !newAccount.personality) {
       return;
     }
 
-    const account: TikTokAccount = {
-      id: Date.now().toString(),
-      name: newAccount.name,
-      prompt: newAccount.prompt,
-      personality: newAccount.personality,
-      profileImage: newAccount.profileImage || "/placeholder.svg",
-      tikTokUrl: newAccount.tikTokUrl || "",
-      daysInInternship: 0,
-      totalViews: 0,
-      pendingScripts: [],
-      publishedPosts: []
-    };
-
-    setAccounts(prev => [...prev, account]);
-    setNewAccount({
-      name: "",
-      prompt: "",
-      personality: "",
-      tikTokUrl: "",
-      profileImage: "/placeholder.svg"
-    });
-    setIsAddDialogOpen(false);
+    const result = await createAccount(newAccount);
+    if (result) {
+      setNewAccount({
+        username: "",
+        prompt: "",
+        personality: "",
+        tiktok_url: ""
+      });
+      setIsAddDialogOpen(false);
+    }
   };
 
   // Calculate stats
   const totalAccounts = accounts.length;
-  const totalViews = accounts.reduce((sum, account) => sum + account.totalViews, 0);
-  const totalDays = accounts.reduce((sum, account) => sum + account.daysInInternship, 0);
+  const totalViews = accounts.reduce((sum, account) => sum + account.total_views, 0);
+  const totalDays = accounts.reduce((sum, account) => sum + account.days_in_internship, 0);
   const avgDays = totalAccounts > 0 ? Math.round(totalDays / totalAccounts) : 0;
 
   return (
@@ -174,16 +122,16 @@ const Index = () => {
                     </p>
                   </DialogHeader>
                   <div className="space-y-6 pt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-sm font-medium">Nom du personnage*</Label>
-                      <Input
-                        id="name"
-                        value={newAccount.name}
-                        onChange={(e) => setNewAccount(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Ex: Sophie Martin"
-                        className="transition-smooth"
-                      />
-                    </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="username" className="text-sm font-medium">Nom du personnage*</Label>
+                       <Input
+                         id="username"
+                         value={newAccount.username}
+                         onChange={(e) => setNewAccount(prev => ({ ...prev, username: e.target.value }))}
+                         placeholder="Ex: Sophie Martin"
+                         className="transition-smooth"
+                       />
+                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="prompt" className="text-sm font-medium">Prompt du personnage*</Label>
@@ -207,26 +155,26 @@ const Index = () => {
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="tiktokUrl" className="text-sm font-medium">URL TikTok (optionnel)</Label>
-                      <Input
-                        id="tiktokUrl"
-                        value={newAccount.tikTokUrl}
-                        onChange={(e) => setNewAccount(prev => ({ ...prev, tikTokUrl: e.target.value }))}
-                        placeholder="https://tiktok.com/@username"
-                        className="transition-smooth"
-                      />
-                    </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="tiktok_url" className="text-sm font-medium">URL TikTok (optionnel)</Label>
+                       <Input
+                         id="tiktok_url"
+                         value={newAccount.tiktok_url}
+                         onChange={(e) => setNewAccount(prev => ({ ...prev, tiktok_url: e.target.value }))}
+                         placeholder="https://tiktok.com/@username"
+                         className="transition-smooth"
+                       />
+                     </div>
                     
                     <div className="flex space-x-3 pt-6">
-                      <Button 
-                        onClick={handleAddAccount}
-                        className="flex-1 bg-gradient-primary hover:shadow-glow transition-all"
-                        disabled={!newAccount.name || !newAccount.prompt || !newAccount.personality}
-                        size="lg"
-                      >
-                        Créer le stagiaire
-                      </Button>
+                       <Button 
+                         onClick={handleAddAccount}
+                         className="flex-1 bg-gradient-primary hover:shadow-glow transition-all"
+                         disabled={!newAccount.username || !newAccount.prompt || !newAccount.personality}
+                         size="lg"
+                       >
+                         Créer le stagiaire
+                       </Button>
                       <Button 
                         variant="outline" 
                         onClick={() => setIsAddDialogOpen(false)}
@@ -279,9 +227,9 @@ const Index = () => {
                     <Heart className="h-5 w-5 text-warning" />
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-warning">
-                      {accounts.filter(a => a.daysInInternship > 0).length}
-                    </div>
+                 <div className="text-lg font-bold text-warning">
+                   {accounts.filter(a => a.days_in_internship > 0).length}
+                 </div>
                     <div className="text-xs text-muted-foreground">Actifs</div>
                   </div>
                 </div>

@@ -9,7 +9,7 @@ interface AccountCardProps {
 }
 
 const AccountCard = ({ account, onClick }: AccountCardProps) => {
-  const isActive = account.daysInInternship > 0;
+  const isActive = account.days_in_internship > 0;
   
   return (
     <Card 
@@ -25,7 +25,7 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
           >
             {isActive ? "Actif" : "Nouveau"}
           </Badge>
-          {account.totalViews > 0 && (
+          {account.total_views > 0 && (
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3" />
               <span>+{Math.floor(Math.random() * 20 + 5)}%</span>
@@ -36,8 +36,8 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
         {/* Profile Image */}
         <div className="relative mx-auto mb-4 w-fit">
           <img 
-            src={account.profileImage} 
-            alt={account.name}
+            src={account.profile_picture_url || "/placeholder.svg"} 
+            alt={account.username}
             className="w-20 h-20 rounded-full object-cover border-3 border-gradient-primary shadow-lg group-hover:scale-110 transition-transform duration-300"
           />
           {isActive && (
@@ -49,7 +49,7 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
 
         {/* Name */}
         <h3 className="font-bold text-lg mb-3 text-center group-hover:text-primary transition-colors">
-          {account.name}
+          {account.username}
         </h3>
 
         {/* Stats */}
@@ -59,7 +59,7 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
               <Calendar className="h-4 w-4" />
               <span>Stage</span>
             </div>
-            <span className="font-semibold">{account.daysInInternship} jours</span>
+            <span className="font-semibold">{account.days_in_internship} jours</span>
           </div>
 
           <div className="flex items-center justify-between text-sm">
@@ -68,7 +68,7 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
               <span>Vues</span>
             </div>
             <span className="font-semibold text-accent">
-              {account.totalViews.toLocaleString()}
+              {account.total_views.toLocaleString()}
             </span>
           </div>
 
@@ -76,12 +76,12 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
           <div className="mt-4 pt-3 border-t border-muted">
             <div className="flex justify-between text-xs text-muted-foreground mb-2">
               <span>Progression</span>
-              <span>{Math.min(account.daysInInternship * 3, 100)}%</span>
+              <span>{Math.min(account.days_in_internship * 3, 100)}%</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div 
                 className="bg-gradient-primary h-2 rounded-full transition-all duration-500 group-hover:shadow-glow"
-                style={{ width: `${Math.min(account.daysInInternship * 3, 100)}%` }}
+                style={{ width: `${Math.min(account.days_in_internship * 3, 100)}%` }}
               />
             </div>
           </div>

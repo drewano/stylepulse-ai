@@ -5,15 +5,18 @@ export interface Company {
 
 export interface TikTokAccount {
   id: string;
-  name: string;
-  prompt: string;
-  personality: string;
-  profileImage: string;
-  daysInInternship: number;
-  tikTokUrl: string;
-  totalViews: number;
-  pendingScripts: Script[];
-  publishedPosts: PublishedPost[];
+  username: string; // Corresponds to social_accounts.username
+  prompt: string | null;
+  personality: string | null;
+  profile_picture_url: string | null;
+  days_in_internship: number;
+  tiktok_url: string | null;
+  total_views: number;
+  workspace_id: string;
+  platform: string;
+  created_at: string;
+  pendingScripts?: Script[];
+  publishedPosts?: PublishedPost[];
 }
 
 export interface Script {

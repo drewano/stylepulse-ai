@@ -14,7 +14,202 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      generated_content: {
+        Row: {
+          created_at: string
+          id: string
+          media_url: string | null
+          scheduled_at: string | null
+          social_account_id: string
+          status: string
+          text_content: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          media_url?: string | null
+          scheduled_at?: string | null
+          social_account_id: string
+          status?: string
+          text_content?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          media_url?: string | null
+          scheduled_at?: string | null
+          social_account_id?: string
+          status?: string
+          text_content?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_content_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_accounts: {
+        Row: {
+          created_at: string
+          days_in_internship: number | null
+          id: string
+          personality: string | null
+          platform: string
+          profile_picture_url: string | null
+          prompt: string | null
+          style_guide_id: string | null
+          tiktok_url: string | null
+          total_views: number | null
+          username: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          days_in_internship?: number | null
+          id?: string
+          personality?: string | null
+          platform: string
+          profile_picture_url?: string | null
+          prompt?: string | null
+          style_guide_id?: string | null
+          tiktok_url?: string | null
+          total_views?: number | null
+          username: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          days_in_internship?: number | null
+          id?: string
+          personality?: string | null
+          platform?: string
+          profile_picture_url?: string | null
+          prompt?: string | null
+          style_guide_id?: string | null
+          tiktok_url?: string | null
+          total_views?: number | null
+          username?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_accounts_style_guide_id_fkey"
+            columns: ["style_guide_id"]
+            isOneToOne: false
+            referencedRelation: "style_guides"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_accounts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      style_guides: {
+        Row: {
+          created_at: string
+          fonts: Json | null
+          id: string
+          name: string
+          primary_colors: Json | null
+          tone_of_voice: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          fonts?: Json | null
+          id?: string
+          name?: string
+          primary_colors?: Json | null
+          tone_of_voice?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          fonts?: Json | null
+          id?: string
+          name?: string
+          primary_colors?: Json | null
+          tone_of_voice?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "style_guides_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trends: {
+        Row: {
+          description: string | null
+          detected_at: string
+          hashtags: Json | null
+          id: string
+          platform: string
+          title: string
+        }
+        Insert: {
+          description?: string | null
+          detected_at?: string
+          hashtags?: Json | null
+          id?: string
+          platform: string
+          title: string
+        }
+        Update: {
+          description?: string | null
+          detected_at?: string
+          hashtags?: Json | null
+          id?: string
+          platform?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      workspaces: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
