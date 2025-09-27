@@ -17,10 +17,17 @@ export const getProfilePictureUrl = (account: {
   photo_url?: string | null; 
   image_url?: string | null; 
 }): string => {
-  // Try to get image from Supabase storage bucket first
-  const profilePicturePath = `${account.id}.jpg`; // or .png
-  const storageUrl = getPublicUrl("Profil pictures", profilePicturePath);
+  // If we have existing URLs, use them
+  if (account.photo_url) return account.photo_url;
+  if (account.image_url) return account.image_url;
   
-  // Fallback to existing URLs or placeholder
-  return storageUrl || account.photo_url || account.image_url || "/placeholder.svg";
+  // Try to get image from Supabase storage bucket
+  try {
+    const profilePicturePath = `${account.id}.jpg`;
+    const storageUrl = getPublicUrl("Profil pictures", profilePicturePath);
+    return storageUrl;
+  } catch (error) {
+    console.error('Error getting profile picture from storage:', error);
+    return "/placeholder.svg";
+  }
 };

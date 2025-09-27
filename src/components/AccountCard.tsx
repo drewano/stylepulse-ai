@@ -41,11 +41,9 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
             alt={account.nom}
             className="w-20 h-20 rounded-full object-cover border-3 border-gradient-primary shadow-lg group-hover:scale-110 transition-transform duration-300"
             onError={(e) => {
-              // Fallback to existing URLs if storage image fails to load
+              // Fallback to placeholder if image fails to load
               const target = e.target as HTMLImageElement;
-              if (target.src.includes('supabase.co')) {
-                target.src = account.photo_url || account.image_url || "/placeholder.svg";
-              }
+              target.src = "/placeholder.svg";
             }}
           />
           {isActive && (
