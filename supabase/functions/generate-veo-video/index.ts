@@ -27,6 +27,8 @@ interface VeoResponse {
           uri: string;
         };
       }>;
+      raiMediaFilteredCount?: number;
+      raiMediaFilteredReasons?: string[];
     };
   };
   error?: {
@@ -218,11 +220,19 @@ serve(async (req) => {
 
     // Step 1: Generate video with VEO 3 using correct REST API format
     console.log('Calling VEO 3 API...');
+    
+    // Clean the prompt to remove any real person names to avoid content filtering
+    const cleanedPrompt = prompt
+      .replace(/Oussama Ammar/gi, 'le stagiaire')
+      .replace(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g, 'un personnage') // Remove potential real names
+      .replace(/célébrité|celebrity|influenceur/gi, 'personnage populaire');
+    
     const veoRequest = {
       instances: [{
-        prompt: `Create a short, engaging TikTok-style video based on this script: ${prompt}. 
+        prompt: `Create a short, engaging TikTok-style video based on this script: ${cleanedPrompt}. 
                  Make it dynamic, visually interesting, and suitable for social media. 
-                 Duration: 5-10 seconds. Style: Modern, energetic, professional yet fun.`
+                 Duration: 5-10 seconds. Style: Modern, energetic, professional yet fun.
+                 Use generic characters and avoid any real person references.`
       }]
     };
 
@@ -285,8 +295,27 @@ serve(async (req) => {
     // Step 2: Poll for completion
     const completedResult = await pollOperationStatus(veoResult.name);
 
-    // Step 3: Extract video URL using correct VEO 3 response structure
-    const videoUri = completedResult.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
+    // Step 3: Check for content filtering errors first
+    const generateVideoResponse = completedResult.response?.generateVideoResponse;
+    
+    if (generateVideoResponse?.raiMediaFilteredCount && generateVideoResponse.raiMediaFilteredCount > 0) {
+      const reasons = generateVideoResponse.raiMediaFilteredReasons || ['Content filtered by safety policies'];
+      console.error('Content filtered by VEO safety policies:', reasons);
+      
+      // Update video record with content filtering error
+      await supabase
+        .from('videos')
+        .update({
+          status: 'failed',
+          error_message: `Génération refusée: ${reasons.join('. ')}. Essayez avec un contenu différent sans noms de personnes réelles.`
+        })
+        .eq('id', videoRecord.id);
+      
+      throw new Error(`Génération refusée par les filtres de sécurité: ${reasons.join('. ')}`);
+    }
+
+    // Step 4: Extract video URL using correct VEO 3 response structure
+    const videoUri = generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
 
     if (!videoUri) {
       console.error('No video URI in response:', JSON.stringify(completedResult, null, 2));
@@ -296,11 +325,11 @@ serve(async (req) => {
         .from('videos')
         .update({
           status: 'failed',
-          error_message: 'No video generated - missing video URI in response'
+          error_message: 'Aucune vidéo générée - URI manquant dans la réponse'
         })
         .eq('id', videoRecord.id);
       
-      throw new Error('No video generated - missing video URI in response');
+      throw new Error('Aucune vidéo générée - URI manquant dans la réponse');
     }
 
     console.log('Video generated successfully, video URI:', videoUri);
