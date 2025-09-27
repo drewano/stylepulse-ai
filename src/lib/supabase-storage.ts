@@ -18,12 +18,15 @@ export const getProfilePictureUrl = (account: {
   photo_url?: string | null; 
   image_url?: string | null; 
 }): string => {
-  // If we have existing URLs, use them as fallback
-  if (account.photo_url) return account.photo_url;
-  if (account.image_url) return account.image_url;
-  
   // Try to get image from Supabase storage bucket using account name
   try {
+    // Special case for "Baby Lovable" account - use baby.jpeg
+    if (account.nom.toLowerCase().includes('baby')) {
+      const profilePicturePath = 'baby.jpeg';
+      const storageUrl = getPublicUrl("Profil pictures", profilePicturePath);
+      return storageUrl;
+    }
+    
     // Convert account name to lowercase and remove special characters for file name
     const fileName = account.nom.toLowerCase().replace(/[^a-z0-9]/g, '');
     const profilePicturePath = `${fileName}`;
@@ -31,6 +34,7 @@ export const getProfilePictureUrl = (account: {
     return storageUrl;
   } catch (error) {
     console.error('Error getting profile picture from storage:', error);
-    return "/placeholder.svg";
+    // Fallback to existing URLs or placeholder
+    return account.photo_url || account.image_url || "/placeholder.svg";
   }
 };
