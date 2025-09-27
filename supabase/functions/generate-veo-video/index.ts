@@ -185,10 +185,23 @@ serve(async (req) => {
     console.log('Starting video generation for script:', scriptId);
     console.log('Prompt:', prompt.substring(0, 100) + '...');
 
+    // First, get the script to find the compte_id
+    const { data: scriptData, error: scriptError } = await supabase
+      .from('scripts')
+      .select('compte_id')
+      .eq('id', scriptId)
+      .single();
+
+    if (scriptError || !scriptData) {
+      console.error('Error fetching script:', scriptError);
+      throw new Error(`Failed to fetch script: ${scriptError?.message || 'Script not found'}`);
+    }
+
     // Create initial video record in database
     const { data: videoRecord, error: insertError } = await supabase
       .from('videos')
       .insert({
+        compte_id: scriptData.compte_id,
         script_id: scriptId,
         status: 'processing',
         gcp_operation_name: 'pending'
@@ -340,17 +353,27 @@ serve(async (req) => {
       if (supabaseUrl && supabaseServiceKey) {
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
         
-        // Try to find and update any processing video records for this script
+        // Try to find and update any processing video records for this script and compte
         if (requestData?.scriptId) {
-          await supabase
-            .from('videos')
-            .update({ 
-              status: 'failed',
-              error_message: errorMessage,
-              updated_at: new Date().toISOString()
-            })
-            .eq('script_id', requestData.scriptId)
-            .eq('status', 'processing');
+          // Get the script to find compte_id
+          const { data: scriptData } = await supabase
+            .from('scripts')
+            .select('compte_id')
+            .eq('id', requestData.scriptId)
+            .single();
+
+          if (scriptData) {
+            await supabase
+              .from('videos')
+              .update({ 
+                status: 'failed',
+                error_message: errorMessage,
+                updated_at: new Date().toISOString()
+              })
+              .eq('script_id', requestData.scriptId)
+              .eq('compte_id', scriptData.compte_id)
+              .eq('status', 'processing');
+          }
         }
       }
     } catch (updateError) {

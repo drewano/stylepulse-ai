@@ -65,41 +65,41 @@ const AccountDetails = () => {
     }
   };
 
-  const loadVideos = async () => {
-    try {
-      setLoadingVideos(true);
-      const { data, error } = await supabase
-        .from('videos')
-        .select(`
-          *,
-          scripts!inner(compte_id, script_text)
-        `)
-        .eq('scripts.compte_id', parseInt(accountId || "0"))
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false });
+    const loadVideos = async () => {
+      try {
+        setLoadingVideos(true);
+        const { data, error } = await supabase
+          .from('videos')
+          .select(`
+            *,
+            scripts!inner(script_text)
+          `)
+          .eq('compte_id', parseInt(accountId || "0"))
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false });
 
-      if (error) {
+        if (error) {
+          console.error('Error loading videos:', error);
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les vidéos",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setVideos(data || []);
+      } catch (error) {
         console.error('Error loading videos:', error);
         toast({
           title: "Erreur",
           description: "Impossible de charger les vidéos",
           variant: "destructive",
         });
-        return;
+      } finally {
+        setLoadingVideos(false);
       }
-
-      setVideos(data || []);
-    } catch (error) {
-      console.error('Error loading videos:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les vidéos",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingVideos(false);
-    }
-  };
+    };
 
   // Load scripts and videos
   useEffect(() => {
