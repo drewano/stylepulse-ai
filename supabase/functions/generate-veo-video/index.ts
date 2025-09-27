@@ -7,6 +7,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Safe JSON parser to avoid "Unexpected end of JSON input"
+async function safeParseJson(res: Response) {
+  const text = await res.text();
+  try { 
+    return JSON.parse(text); 
+  } catch { 
+    return { raw: text, parseError: true }; 
+  }
+}
+
 // Fonction pour attendre un certain temps (en millisecondes)
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -45,6 +55,11 @@ serve(async (req) => {
     if (!scriptId) {
       throw new Error("Le paramètre 'scriptId' est requis dans le corps de la requête.");
     }
+    
+    const scriptIdNum = Number(scriptId);
+    if (!Number.isFinite(scriptIdNum)) {
+      throw new Error("Le paramètre 'scriptId' doit être un nombre valide.");
+    }
 
     console.log(`[+] Démarrage de la génération vidéo pour le prompt : "${prompt}"`);
 
@@ -63,9 +78,9 @@ serve(async (req) => {
     });
 
     if (!initiateResponse.ok) {
-      const errorData = await initiateResponse.json();
-      console.error('Erreur lors de l\'initiation (API Google) :', errorData);
-      throw new Error(`Erreur de l'API Google GenAI : ${initiateResponse.status} ${JSON.stringify(errorData)}`);
+      const errorData = await safeParseJson(initiateResponse);
+      console.error('Erreur lors de l\'initiation (API Google):', initiateResponse.status, initiateResponse.statusText, errorData);
+      throw new Error(`Erreur de l'API Google GenAI : ${initiateResponse.status} - ${errorData.raw || JSON.stringify(errorData)}`);
     }
 
     const initialOperation = await initiateResponse.json();
@@ -85,11 +100,18 @@ serve(async (req) => {
       const pollResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${GEMINI_API_KEY}`);
       
       if (!pollResponse.ok) {
-        const errorData = await pollResponse.json();
-        console.error('Erreur lors de la verification de l etat (API Google) :', errorData);
+        const errorData = await safeParseJson(pollResponse);
+        console.warn('Poll error:', pollResponse.status, pollResponse.statusText, errorData);
         // On continue d'essayer au lieu de s'arreter immediatement
+        continue;
       } else {
         operation = await pollResponse.json();
+        console.log(`[i] Status: ${operation.done ? 'terminé' : 'en cours'}${operation.error ? `, erreur: ${JSON.stringify(operation.error)}` : ''}`);
+        
+        // Si operation.error existe, arrêter
+        if (operation.error) {
+          throw new Error(`Erreur dans l'opération Google: ${JSON.stringify(operation.error)}`);
+        }
       }
     }
     
@@ -120,7 +142,7 @@ serve(async (req) => {
     const videoBuffer = await videoBlob.arrayBuffer();
     
     // Générer un nom unique pour la vidéo
-    const fileName = `video_${scriptId}_${Date.now()}.mp4`;
+    const fileName = `video_${scriptIdNum}_${Date.now()}.mp4`;
     
     // Stocker la vidéo dans Supabase Storage
     console.log(`[+] Upload de la vidéo vers Supabase Storage: ${fileName}`);
@@ -149,7 +171,7 @@ serve(async (req) => {
     const { data: videoRecord, error: dbError } = await supabase
       .from('videos')
       .insert({
-        script_id: parseInt(scriptId),
+        script_id: scriptIdNum,
         video_url: publicUrl,
         status: 'completed',
         gcp_operation_name: operationName
