@@ -193,16 +193,16 @@ const AccountDetails = () => {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {generatedVideos.map((video) => (
-                      <div 
-                        key={video.id} 
+                      <div
+                        key={video.id}
                         className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
                         onClick={() => setSelectedVideo(video)}
                       >
                         <div className="relative">
                           {video.video_url ? (
                             <div className="aspect-video bg-gray-200 flex items-center justify-center">
-                              <video 
-                                src={video.video_url} 
+                              <video
+                                src={video.video_url}
                                 className="w-full h-full object-cover"
                                 muted
                               />
@@ -234,49 +234,6 @@ const AccountDetails = () => {
               </CardContent>
             </Card>
 
-            {/* Dialog for video preview */}
-            <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>Vidéo</DialogTitle>
-                </DialogHeader>
-                {selectedVideo && (
-                  <div className="flex flex-col items-center">
-                    {selectedVideo.video_url ? (
-                      <video 
-                        src={selectedVideo.video_url} 
-                        controls 
-                        className="w-full max-h-[70vh] object-contain"
-                      />
-                    ) : (
-                      <div className="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                          <p className="text-gray-500">Vidéo en cours de génération...</p>
-                        </div>
-                      </div>
-                    )}
-                    <div className="mt-4 w-full">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-muted-foreground">
-                          Créée le: {new Date(selectedVideo.created_at).toLocaleString()}
-                        </span>
-                        <Badge variant="outline" className="capitalize">
-                          {selectedVideo.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
             {/* Scripts en attente */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -297,9 +254,9 @@ const AccountDetails = () => {
 
                 <div className="max-h-96 overflow-y-auto space-y-3">
                   {mockScripts.map((script) => (
-                    <div 
-                      key={script.id} 
-                      className={`p-4 rounded-lg border ${script.isValidated ? 'bg-success/10 border-success/30' : 'bg-card'}`}
+                    <div
+                      key={script.id}
+                      className={`p-4 rounded-lg border ${script.isValidated ? "bg-success/10 border-success/30" : "bg-card"}`}
                     >
                       {editingScript === script.id ? (
                         <div className="space-y-3">
@@ -324,8 +281,8 @@ const AccountDetails = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex space-x-2">
                               {!script.isValidated && (
-                                <Button 
-                                  size="sm" 
+                                <Button
+                                  size="sm"
                                   onClick={() => handleValidateScript(script.id)}
                                   className="bg-gradient-primary"
                                 >
@@ -333,16 +290,16 @@ const AccountDetails = () => {
                                   Valider
                                 </Button>
                               )}
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleEditScript(script)}
                               >
                                 <Edit3 className="h-4 w-4 mr-1" />
                                 Modifier
                               </Button>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="destructive"
                                 onClick={() => handleDeleteScript(script.id)}
                               >
@@ -375,6 +332,43 @@ const AccountDetails = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Dialog for video preview */}
+            <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Vidéo</DialogTitle>
+                </DialogHeader>
+                {selectedVideo && (
+                  <div className="flex flex-col items-center">
+                    {selectedVideo.video_url ? (
+                      <video
+                        src={selectedVideo.video_url}
+                        controls
+                        className="w-full max-h-[70vh] object-contain"
+                      />
+                    ) : (
+                      <div className="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                          <p className="text-gray-500">Vidéo en cours de génération...</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-4 w-full">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-muted-foreground">
+                          Créée le: {new Date(selectedVideo.created_at).toLocaleString()}
+                        </span>
+                        <Badge variant="outline" className="capitalize">
+                          {selectedVideo.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>
