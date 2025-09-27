@@ -239,7 +239,7 @@ const AccountDetails = () => {
     setGeneratingVideo(script.id);
     try {
       const { data, error } = await supabase.functions.invoke('generate-veo-video', {
-        body: { prompt: script.content }
+        body: { prompt: script.content, scriptId: script.id }
       });
 
       if (error) {
@@ -255,14 +255,13 @@ const AccountDetails = () => {
       console.log('Video generation result:', data);
       toast({
         title: "Vidéo générée",
-        description: "La vidéo a été générée avec succès",
+        description: "La vidéo a été générée et stockée avec succès",
         duration: 5000,
       });
 
-      // Ici vous pouvez traiter la réponse de l'API (URL de la vidéo, etc.)
-      if (data?.video?.uri) {
-        // Si l'API renvoie un lien direct vers la vidéo
-        window.open(data.video.uri, '_blank');
+      // Ouvrir la vidéo dans un nouvel onglet
+      if (data?.video?.url) {
+        window.open(data.video.url, '_blank');
       }
 
     } catch (error) {

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 
 // Headers CORS pour autoriser les requêtes depuis votre application web
 const corsHeaders = {
@@ -8,6 +9,11 @@ const corsHeaders = {
 
 // Fonction pour attendre un certain temps (en millisecondes)
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Initialiser le client Supabase
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 serve(async (req) => {
   // Gérer la requête CORS preflight
@@ -22,10 +28,22 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY non configuré dans les secrets Supabase');
     }
     
-    // Extraire le prompt du corps de la requête
-    const { prompt } = await req.json();
+    // Extraire le prompt et l'ID du script du corps de la requête
+    const body = await req.text();
+    let requestData;
+    
+    try {
+      requestData = JSON.parse(body);
+    } catch (e) {
+      throw new Error("Format JSON invalide dans la requête");
+    }
+    
+    const { prompt, scriptId } = requestData;
     if (!prompt) {
       throw new Error("Le paramètre 'prompt' est requis dans le corps de la requête.");
+    }
+    if (!scriptId) {
+      throw new Error("Le paramètre 'scriptId' est requis dans le corps de la requête.");
     }
 
     console.log(`[+] Démarrage de la génération vidéo pour le prompt : "${prompt}"`);
@@ -81,10 +99,81 @@ serve(async (req) => {
 
     console.log("[+] Operation terminee !");
 
-    // --- Étape 3: Renvoyer le résultat final ---
+    // --- Étape 3: Télécharger et stocker la vidéo ---
     const finalResponse = operation.response;
+    
+    if (!finalResponse.video?.uri) {
+      throw new Error("Aucune vidéo générée dans la réponse");
+    }
 
-    return new Response(JSON.stringify(finalResponse), {
+    const videoUrl = finalResponse.video.uri;
+    console.log(`[+] URL de la vidéo générée: ${videoUrl}`);
+
+    // Télécharger la vidéo
+    console.log("[+] Téléchargement de la vidéo...");
+    const videoResponse = await fetch(videoUrl);
+    if (!videoResponse.ok) {
+      throw new Error(`Erreur lors du téléchargement de la vidéo: ${videoResponse.status}`);
+    }
+
+    const videoBlob = await videoResponse.blob();
+    const videoBuffer = await videoBlob.arrayBuffer();
+    
+    // Générer un nom unique pour la vidéo
+    const fileName = `video_${scriptId}_${Date.now()}.mp4`;
+    
+    // Stocker la vidéo dans Supabase Storage
+    console.log(`[+] Upload de la vidéo vers Supabase Storage: ${fileName}`);
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('videos')
+      .upload(fileName, videoBuffer, {
+        contentType: 'video/mp4',
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Erreur lors de l\'upload:', uploadError);
+      throw new Error(`Erreur lors de l'upload: ${uploadError.message}`);
+    }
+
+    // Obtenir l'URL publique de la vidéo
+    const { data: publicUrlData } = supabase.storage
+      .from('videos')
+      .getPublicUrl(fileName);
+    
+    const publicUrl = publicUrlData.publicUrl;
+    console.log(`[+] Vidéo stockée avec succès: ${publicUrl}`);
+
+    // Sauvegarder les informations dans la base de données
+    const { data: videoRecord, error: dbError } = await supabase
+      .from('videos')
+      .insert({
+        script_id: parseInt(scriptId),
+        video_url: publicUrl,
+        status: 'completed',
+        gcp_operation_name: operationName
+      })
+      .select()
+      .single();
+
+    if (dbError) {
+      console.error('Erreur lors de la sauvegarde en base:', dbError);
+      throw new Error(`Erreur lors de la sauvegarde: ${dbError.message}`);
+    }
+
+    console.log("[+] Vidéo sauvegardée en base de données");
+
+    // --- Étape 4: Renvoyer le résultat final ---
+    return new Response(JSON.stringify({
+      success: true,
+      video: {
+        id: videoRecord.id,
+        url: publicUrl,
+        originalUrl: videoUrl,
+        fileName: fileName
+      }
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
