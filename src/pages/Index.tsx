@@ -5,7 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Building2, FileText, Users, TrendingUp, Eye, Heart } from "lucide-react";
 import AccountCard from "@/components/AccountCard";
 import { Company, TikTokAccount } from "@/types";
 
@@ -99,128 +101,260 @@ const Index = () => {
     setIsAddDialogOpen(false);
   };
 
-  return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Company Info */}
-        <div className="mb-8 space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
-              Nom de l'entreprise
-            </label>
-            <Input
-              value={company.name}
-              onChange={(e) => setCompany(prev => ({ ...prev, name: e.target.value }))}
-              className="text-2xl font-bold border-none px-0 focus-visible:ring-0"
-              placeholder="Nom de votre entreprise"
-            />
-          </div>
+  // Calculate stats
+  const totalAccounts = accounts.length;
+  const totalViews = accounts.reduce((sum, account) => sum + account.totalViews, 0);
+  const totalDays = accounts.reduce((sum, account) => sum + account.daysInInternship, 0);
+  const avgDays = totalAccounts > 0 ? Math.round(totalDays / totalAccounts) : 0;
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
-              Description de l'entreprise
-            </label>
-            <Textarea
-              value={company.description}
-              onChange={(e) => setCompany(prev => ({ ...prev, description: e.target.value }))}
-              className="min-h-24 border-none px-0 focus-visible:ring-0 text-muted-foreground"
-              placeholder="Description de votre entreprise et de ses activités"
-            />
+  return (
+    <div className="min-h-screen bg-gradient-subtle">
+      {/* Hero Header */}
+      <div className="bg-gradient-primary text-primary-foreground py-12 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Building2 className="h-6 w-6" />
+                  <span className="text-sm font-medium opacity-90">Entreprise</span>
+                </div>
+                <Input
+                  value={company.name}
+                  onChange={(e) => setCompany(prev => ({ ...prev, name: e.target.value }))}
+                  className="text-3xl font-bold bg-white/10 border-white/20 text-white placeholder:text-white/70 focus-visible:ring-white/30"
+                  placeholder="Nom de votre entreprise"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5" />
+                  <span className="text-sm font-medium opacity-90">Description</span>
+                </div>
+                <Textarea
+                  value={company.description}
+                  onChange={(e) => setCompany(prev => ({ ...prev, description: e.target.value }))}
+                  className="min-h-24 bg-white/10 border-white/20 text-white placeholder:text-white/70 focus-visible:ring-white/30"
+                  placeholder="Description de votre entreprise et de ses activités"
+                />
+              </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="bg-white/10 border-white/20 backdrop-blur">
+                <CardContent className="p-6 text-center">
+                  <Users className="h-8 w-8 mx-auto mb-2 text-accent-light" />
+                  <div className="text-2xl font-bold text-white">{totalAccounts}</div>
+                  <div className="text-sm text-white/80">Comptes TikTok</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/10 border-white/20 backdrop-blur">
+                <CardContent className="p-6 text-center">
+                  <Eye className="h-8 w-8 mx-auto mb-2 text-accent-light" />
+                  <div className="text-2xl font-bold text-white">{totalViews.toLocaleString()}</div>
+                  <div className="text-sm text-white/80">Vues totales</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/10 border-white/20 backdrop-blur">
+                <CardContent className="p-6 text-center">
+                  <TrendingUp className="h-8 w-8 mx-auto mb-2 text-accent-light" />
+                  <div className="text-2xl font-bold text-white">{avgDays}</div>
+                  <div className="text-sm text-white/80">Jours moyens</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/10 border-white/20 backdrop-blur">
+                <CardContent className="p-6 text-center">
+                  <Heart className="h-8 w-8 mx-auto mb-2 text-accent-light" />
+                  <div className="text-2xl font-bold text-white">
+                    {accounts.filter(a => a.daysInInternship > 0).length}
+                  </div>
+                  <div className="text-sm text-white/80">Actifs</div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Accounts Grid */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">
-              Comptes TikTok ({accounts.length})
-            </h2>
-            
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-primary">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Ajouter un compte
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Nouveau compte TikTok</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nom du personnage*</Label>
-                    <Input
-                      id="name"
-                      value={newAccount.name}
-                      onChange={(e) => setNewAccount(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Ex: Sophie Martin"
-                    />
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-6 -mt-8">
+        <Card className="shadow-lg border-0 bg-background">
+          <CardContent className="p-8">
+
+            {/* Accounts Section Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold flex items-center">
+                  <Users className="h-6 w-6 mr-3 text-primary" />
+                  Vos stagiaires virtuels
+                </h2>
+                <p className="text-muted-foreground">
+                  Gérez vos personnages TikTok et suivez leurs performances
+                </p>
+              </div>
+              
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="lg" className="bg-gradient-primary shadow-glow hover:shadow-lg transition-all">
+                    <Plus className="h-5 w-5 mr-2" />
+                    Nouveau stagiaire
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader className="space-y-3">
+                    <DialogTitle className="text-xl">Créer un nouveau stagiaire</DialogTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Définissez la personnalité et le style de votre nouveau créateur de contenu IA
+                    </p>
+                  </DialogHeader>
+                  <div className="space-y-6 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-sm font-medium">Nom du personnage*</Label>
+                      <Input
+                        id="name"
+                        value={newAccount.name}
+                        onChange={(e) => setNewAccount(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Ex: Sophie Martin"
+                        className="transition-smooth"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="prompt" className="text-sm font-medium">Prompt du personnage*</Label>
+                      <Textarea
+                        id="prompt"
+                        value={newAccount.prompt}
+                        onChange={(e) => setNewAccount(prev => ({ ...prev, prompt: e.target.value }))}
+                        placeholder="Ex: Créer du contenu sur les tendances tech pour les jeunes professionnels"
+                        className="min-h-24 transition-smooth"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="personality" className="text-sm font-medium">Personnalité*</Label>
+                      <Textarea
+                        id="personality"
+                        value={newAccount.personality}
+                        onChange={(e) => setNewAccount(prev => ({ ...prev, personality: e.target.value }))}
+                        placeholder="Ex: Dynamique, passionnée par l'innovation, pédagogue"
+                        className="min-h-24 transition-smooth"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="tiktokUrl" className="text-sm font-medium">URL TikTok (optionnel)</Label>
+                      <Input
+                        id="tiktokUrl"
+                        value={newAccount.tikTokUrl}
+                        onChange={(e) => setNewAccount(prev => ({ ...prev, tikTokUrl: e.target.value }))}
+                        placeholder="https://tiktok.com/@username"
+                        className="transition-smooth"
+                      />
+                    </div>
+                    
+                    <div className="flex space-x-3 pt-6">
+                      <Button 
+                        onClick={handleAddAccount}
+                        className="flex-1 bg-gradient-primary hover:shadow-glow transition-all"
+                        disabled={!newAccount.name || !newAccount.prompt || !newAccount.personality}
+                        size="lg"
+                      >
+                        Créer le stagiaire
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsAddDialogOpen(false)}
+                        className="flex-1 hover:bg-muted transition-smooth"
+                        size="lg"
+                      >
+                        Annuler
+                      </Button>
+                    </div>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="prompt">Prompt du personnage*</Label>
-                    <Textarea
-                      id="prompt"
-                      value={newAccount.prompt}
-                      onChange={(e) => setNewAccount(prev => ({ ...prev, prompt: e.target.value }))}
-                      placeholder="Ex: Créer du contenu sur les tendances tech pour les jeunes professionnels"
-                      className="min-h-20"
-                    />
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Enhanced Status Bar */}
+            {totalAccounts > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className="flex items-center space-x-3 p-4 rounded-lg bg-primary/5 border border-primary/10">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Users className="h-5 w-5 text-primary" />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="personality">Personnalité*</Label>
-                    <Textarea
-                      id="personality"
-                      value={newAccount.personality}
-                      onChange={(e) => setNewAccount(prev => ({ ...prev, personality: e.target.value }))}
-                      placeholder="Ex: Dynamique, passionnée par l'innovation, pédagogue"
-                      className="min-h-20"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="tiktokUrl">URL TikTok (optionnel)</Label>
-                    <Input
-                      id="tiktokUrl"
-                      value={newAccount.tikTokUrl}
-                      onChange={(e) => setNewAccount(prev => ({ ...prev, tikTokUrl: e.target.value }))}
-                      placeholder="https://tiktok.com/@username"
-                    />
-                  </div>
-                  
-                  <div className="flex space-x-2 pt-4">
-                    <Button 
-                      onClick={handleAddAccount}
-                      className="flex-1 bg-gradient-primary"
-                      disabled={!newAccount.name || !newAccount.prompt || !newAccount.personality}
-                    >
-                      Créer le compte
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setIsAddDialogOpen(false)}
-                      className="flex-1"
-                    >
-                      Annuler
-                    </Button>
+                  <div>
+                    <div className="text-lg font-bold text-primary">{totalAccounts}</div>
+                    <div className="text-xs text-muted-foreground">Stagiaires</div>
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {accounts.map((account) => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                onClick={() => handleAccountClick(account.id)}
-              />
-            ))}
-          </div>
-        </div>
+
+                <div className="flex items-center space-x-3 p-4 rounded-lg bg-accent/5 border border-accent/10">
+                  <div className="p-2 rounded-lg bg-accent/10">
+                    <Eye className="h-5 w-5 text-accent" />
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-accent">{totalViews.toLocaleString()}</div>
+                    <div className="text-xs text-muted-foreground">Vues totales</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 p-4 rounded-lg bg-success/5 border border-success/10">
+                  <div className="p-2 rounded-lg bg-success/10">
+                    <TrendingUp className="h-5 w-5 text-success" />
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-success">{avgDays}</div>
+                    <div className="text-xs text-muted-foreground">Jours moyenne</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 p-4 rounded-lg bg-warning/5 border border-warning/10">
+                  <div className="p-2 rounded-lg bg-warning/10">
+                    <Heart className="h-5 w-5 text-warning" />
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-warning">
+                      {accounts.filter(a => a.daysInInternship > 0).length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Actifs</div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Accounts Grid */}
+            {totalAccounts === 0 ? (
+              <Card className="p-12 text-center border-dashed border-2">
+                <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
+                  <Users className="h-12 w-12 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Aucun stagiaire pour le moment</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Créez votre premier stagiaire virtuel pour commencer à générer du contenu TikTok automatiquement
+                </p>
+                <Button onClick={() => setIsAddDialogOpen(true)} size="lg" className="bg-gradient-primary">
+                  <Plus className="h-5 w-5 mr-2" />
+                  Créer mon premier stagiaire
+                </Button>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {accounts.map((account) => (
+                  <AccountCard
+                    key={account.id}
+                    account={account}
+                    onClick={() => handleAccountClick(account.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
