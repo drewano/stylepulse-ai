@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       comptes: {
         Row: {
+          created_at: string | null
+          days_in_internship: number | null
           entreprise_id: number | null
           id: number
           image_url: string | null
@@ -23,10 +25,14 @@ export type Database = {
           nom: string
           personnalite: string | null
           photo_url: string | null
+          platform: string | null
           prompt: string | null
+          updated_at: string | null
           vues_totales: number | null
         }
         Insert: {
+          created_at?: string | null
+          days_in_internship?: number | null
           entreprise_id?: number | null
           id?: number
           image_url?: string | null
@@ -34,10 +40,14 @@ export type Database = {
           nom: string
           personnalite?: string | null
           photo_url?: string | null
+          platform?: string | null
           prompt?: string | null
+          updated_at?: string | null
           vues_totales?: number | null
         }
         Update: {
+          created_at?: string | null
+          days_in_internship?: number | null
           entreprise_id?: number | null
           id?: number
           image_url?: string | null
@@ -45,7 +55,9 @@ export type Database = {
           nom?: string
           personnalite?: string | null
           photo_url?: string | null
+          platform?: string | null
           prompt?: string | null
+          updated_at?: string | null
           vues_totales?: number | null
         }
         Relationships: [
@@ -145,80 +157,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      social_accounts: {
-        Row: {
-          created_at: string | null
-          days_in_internship: number | null
-          id: string
-          personality: string | null
-          platform: string | null
-          profile_picture_url: string | null
-          prompt: string | null
-          tiktok_url: string | null
-          total_views: number | null
-          updated_at: string | null
-          username: string
-          workspace_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          days_in_internship?: number | null
-          id?: string
-          personality?: string | null
-          platform?: string | null
-          profile_picture_url?: string | null
-          prompt?: string | null
-          tiktok_url?: string | null
-          total_views?: number | null
-          updated_at?: string | null
-          username: string
-          workspace_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          days_in_internship?: number | null
-          id?: string
-          personality?: string | null
-          platform?: string | null
-          profile_picture_url?: string | null
-          prompt?: string | null
-          tiktok_url?: string | null
-          total_views?: number | null
-          updated_at?: string | null
-          username?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_social_accounts_workspace"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      workspaces: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
       }
     }
     Views: {

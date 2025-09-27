@@ -12,7 +12,6 @@ import AccountCard from "@/components/AccountCard";
 import { TikTokAccount } from "@/types";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCompany } from "@/hooks/useCompany";
-import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -21,47 +20,35 @@ const Index = () => {
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newAccount, setNewAccount] = useState({
-    username: "",
+    nom: "",
     prompt: "",
-    personality: "",
-    tiktok_url: ""
+    personnalite: "",
+    lien_tiktok: ""
   });
 
-  const handleAccountClick = (accountId: string) => {
+  const handleAccountClick = (accountId: number) => {
     navigate(`/account/${accountId}`);
   };
 
   const handleAddAccount = async () => {
-    if (!newAccount.username || !newAccount.prompt || !newAccount.personality) {
+    if (!newAccount.nom || !newAccount.prompt || !newAccount.personnalite) {
       return;
     }
 
-    // Get default workspace
-    const { data: workspace } = await supabase
-      .from('workspaces')
-      .select('id')
-      .limit(1)
-      .single();
-
     const accountData = {
-      username: newAccount.username,
+      nom: newAccount.nom,
       prompt: newAccount.prompt,
-      personality: newAccount.personality,
-      tiktok_url: newAccount.tiktok_url || null,
-      profile_picture_url: null,
-      days_in_internship: 0,
-      total_views: 0,
-      platform: 'tiktok',
-      workspace_id: workspace?.id || crypto.randomUUID(),
+      personnalite: newAccount.personnalite,
+      lien_tiktok: newAccount.lien_tiktok || null,
     };
 
     const result = await createAccount(accountData);
     if (result) {
       setNewAccount({
-        username: "",
+        nom: "",
         prompt: "",
-        personality: "",
-        tiktok_url: ""
+        personnalite: "",
+        lien_tiktok: ""
       });
       setIsAddDialogOpen(false);
     }
@@ -69,7 +56,7 @@ const Index = () => {
 
   // Calculate stats
   const totalAccounts = accounts.length;
-  const totalViews = accounts.reduce((sum, account) => sum + account.total_views, 0);
+  const totalViews = accounts.reduce((sum, account) => sum + account.vues_totales, 0);
   const totalDays = accounts.reduce((sum, account) => sum + account.days_in_internship, 0);
   const avgDays = totalAccounts > 0 ? Math.round(totalDays / totalAccounts) : 0;
 
@@ -143,16 +130,16 @@ const Index = () => {
                     </p>
                   </DialogHeader>
                   <div className="space-y-6 pt-4">
-                     <div className="space-y-2">
-                       <Label htmlFor="username" className="text-sm font-medium">Nom du personnage*</Label>
-                       <Input
-                         id="username"
-                         value={newAccount.username}
-                         onChange={(e) => setNewAccount(prev => ({ ...prev, username: e.target.value }))}
-                         placeholder="Ex: Sophie Martin"
-                         className="transition-smooth"
-                       />
-                     </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="nom" className="text-sm font-medium">Nom du personnage*</Label>
+                         <Input
+                           id="nom"
+                           value={newAccount.nom}
+                           onChange={(e) => setNewAccount(prev => ({ ...prev, nom: e.target.value }))}
+                           placeholder="Ex: Sophie Martin"
+                           className="transition-smooth"
+                         />
+                       </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="prompt" className="text-sm font-medium">Prompt du personnage*</Label>
@@ -165,33 +152,33 @@ const Index = () => {
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="personality" className="text-sm font-medium">Personnalité*</Label>
-                      <Textarea
-                        id="personality"
-                        value={newAccount.personality}
-                        onChange={(e) => setNewAccount(prev => ({ ...prev, personality: e.target.value }))}
-                        placeholder="Ex: Dynamique, passionnée par l'innovation, pédagogue"
-                        className="min-h-24 transition-smooth"
-                      />
-                    </div>
-                    
                      <div className="space-y-2">
-                       <Label htmlFor="tiktok_url" className="text-sm font-medium">URL TikTok (optionnel)</Label>
-                       <Input
-                         id="tiktok_url"
-                         value={newAccount.tiktok_url}
-                         onChange={(e) => setNewAccount(prev => ({ ...prev, tiktok_url: e.target.value }))}
-                         placeholder="https://tiktok.com/@username"
-                         className="transition-smooth"
+                       <Label htmlFor="personnalite" className="text-sm font-medium">Personnalité*</Label>
+                       <Textarea
+                         id="personnalite"
+                         value={newAccount.personnalite}
+                         onChange={(e) => setNewAccount(prev => ({ ...prev, personnalite: e.target.value }))}
+                         placeholder="Ex: Dynamique, passionnée par l'innovation, pédagogue"
+                         className="min-h-24 transition-smooth"
                        />
                      </div>
+                    
+                      <div className="space-y-2">
+                        <Label htmlFor="lien_tiktok" className="text-sm font-medium">URL TikTok (optionnel)</Label>
+                        <Input
+                          id="lien_tiktok"
+                          value={newAccount.lien_tiktok}
+                          onChange={(e) => setNewAccount(prev => ({ ...prev, lien_tiktok: e.target.value }))}
+                          placeholder="https://tiktok.com/@username"
+                          className="transition-smooth"
+                        />
+                      </div>
                     
                     <div className="flex space-x-3 pt-6">
                        <Button 
                          onClick={handleAddAccount}
                          className="flex-1 bg-gradient-primary hover:shadow-glow transition-all"
-                         disabled={!newAccount.username || !newAccount.prompt || !newAccount.personality}
+                          disabled={!newAccount.nom || !newAccount.prompt || !newAccount.personnalite}
                          size="lg"
                        >
                          Créer le stagiaire
@@ -283,16 +270,16 @@ const Index = () => {
                       </p>
                     </DialogHeader>
                     <div className="space-y-6 pt-4">
-                       <div className="space-y-2">
-                         <Label htmlFor="username" className="text-sm font-medium">Nom du personnage*</Label>
-                         <Input
-                           id="username"
-                           value={newAccount.username}
-                           onChange={(e) => setNewAccount(prev => ({ ...prev, username: e.target.value }))}
-                           placeholder="Ex: Sophie Martin"
-                           className="transition-smooth"
-                         />
-                       </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="nom2" className="text-sm font-medium">Nom du personnage*</Label>
+                          <Input
+                            id="nom2"
+                            value={newAccount.nom}
+                            onChange={(e) => setNewAccount(prev => ({ ...prev, nom: e.target.value }))}
+                            placeholder="Ex: Sophie Martin"
+                            className="transition-smooth"
+                          />
+                        </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="prompt" className="text-sm font-medium">Prompt du personnage*</Label>
@@ -305,33 +292,33 @@ const Index = () => {
                         />
                       </div>
                       
-                      <div className="space-y-2">
-                        <Label htmlFor="personality" className="text-sm font-medium">Personnalité*</Label>
-                        <Textarea
-                          id="personality"
-                          value={newAccount.personality}
-                          onChange={(e) => setNewAccount(prev => ({ ...prev, personality: e.target.value }))}
-                          placeholder="Ex: Dynamique, passionnée par l'innovation, pédagogue"
-                          className="min-h-24 transition-smooth"
-                        />
-                      </div>
-                      
                        <div className="space-y-2">
-                         <Label htmlFor="tiktok_url" className="text-sm font-medium">URL TikTok (optionnel)</Label>
-                         <Input
-                           id="tiktok_url"
-                           value={newAccount.tiktok_url}
-                           onChange={(e) => setNewAccount(prev => ({ ...prev, tiktok_url: e.target.value }))}
-                           placeholder="https://tiktok.com/@username"
-                           className="transition-smooth"
+                         <Label htmlFor="personnalite2" className="text-sm font-medium">Personnalité*</Label>
+                         <Textarea
+                           id="personnalite2"
+                           value={newAccount.personnalite}
+                           onChange={(e) => setNewAccount(prev => ({ ...prev, personnalite: e.target.value }))}
+                           placeholder="Ex: Dynamique, passionnée par l'innovation, pédagogue"
+                           className="min-h-24 transition-smooth"
                          />
                        </div>
+                      
+                        <div className="space-y-2">
+                          <Label htmlFor="lien_tiktok2" className="text-sm font-medium">URL TikTok (optionnel)</Label>
+                          <Input
+                            id="lien_tiktok2"
+                            value={newAccount.lien_tiktok}
+                            onChange={(e) => setNewAccount(prev => ({ ...prev, lien_tiktok: e.target.value }))}
+                            placeholder="https://tiktok.com/@username"
+                            className="transition-smooth"
+                          />
+                        </div>
                       
                       <div className="flex space-x-3 pt-6">
                          <Button 
                            onClick={handleAddAccount}
                            className="flex-1 bg-gradient-primary hover:shadow-glow transition-all"
-                           disabled={!newAccount.username || !newAccount.prompt || !newAccount.personality}
+                           disabled={!newAccount.nom || !newAccount.prompt || !newAccount.personnalite}
                            size="lg"
                          >
                            Créer le stagiaire

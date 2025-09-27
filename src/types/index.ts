@@ -4,17 +4,19 @@ export interface Company {
 }
 
 export interface TikTokAccount {
-  id: string;
-  username: string; // Corresponds to social_accounts.username
+  id: number;
+  nom: string; // Corresponds to comptes.nom
   prompt: string | null;
-  personality: string | null;
-  profile_picture_url: string | null;
+  personnalite: string | null;
+  photo_url: string | null;
+  image_url: string | null;
   days_in_internship: number;
-  tiktok_url: string | null;
-  total_views: number;
-  workspace_id: string;
+  lien_tiktok: string | null;
+  vues_totales: number;
+  entreprise_id: number | null;
   platform: string;
   created_at: string;
+  updated_at: string;
   pendingScripts?: Script[];
   publishedPosts?: PublishedPost[];
 }

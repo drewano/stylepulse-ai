@@ -11,9 +11,9 @@ export const useAccounts = () => {
   const fetchAccounts = async () => {
     try {
       const { data, error } = await supabase
-        .from('social_accounts')
+        .from('comptes')
         .select('*')
-        .eq('platform', 'tiktok');
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setAccounts(data || []);
@@ -30,49 +30,24 @@ export const useAccounts = () => {
   };
 
   const createAccount = async (accountData: {
-    username: string;
+    nom: string;
     prompt: string;
-    personality: string;
-    tiktok_url?: string;
+    personnalite: string;
+    lien_tiktok?: string;
   }) => {
     try {
-      // For now, create a default workspace. In production, get from user context
-      const { data: workspace, error: workspaceError } = await supabase
-        .from('workspaces')
-        .select('id')
-        .limit(1)
-        .single();
-
-      let workspaceId = workspace?.id;
-
-      if (!workspace) {
-        // Create a default workspace if none exists
-        const { data: newWorkspace, error: createWorkspaceError } = await supabase
-          .from('workspaces')
-          .insert([{
-            name: 'Mon Espace',
-            description: 'Espace par défaut',
-            owner_id: (await supabase.auth.getUser()).data.user?.id
-          }])
-          .select()
-          .single();
-
-        if (createWorkspaceError) throw createWorkspaceError;
-        workspaceId = newWorkspace.id;
-      }
-
       const { data, error } = await supabase
-        .from('social_accounts')
+        .from('comptes')
         .insert([{
-          username: accountData.username,
+          nom: accountData.nom,
           prompt: accountData.prompt,
-          personality: accountData.personality,
-          tiktok_url: accountData.tiktok_url || null,
+          personnalite: accountData.personnalite,
+          lien_tiktok: accountData.lien_tiktok || null,
           platform: 'tiktok',
-          workspace_id: workspaceId,
           days_in_internship: 0,
-          total_views: 0,
-          profile_picture_url: null
+          vues_totales: 0,
+          photo_url: null,
+          image_url: null
         }])
         .select()
         .single();
@@ -97,10 +72,10 @@ export const useAccounts = () => {
     }
   };
 
-  const updateAccount = async (id: string, updates: Partial<TikTokAccount>) => {
+  const updateAccount = async (id: number, updates: Partial<TikTokAccount>) => {
     try {
       const { data, error } = await supabase
-        .from('social_accounts')
+        .from('comptes')
         .update(updates)
         .eq('id', id)
         .select()
@@ -129,10 +104,10 @@ export const useAccounts = () => {
     }
   };
 
-  const deleteAccount = async (id: string) => {
+  const deleteAccount = async (id: number) => {
     try {
       const { error } = await supabase
-        .from('social_accounts')
+        .from('comptes')
         .delete()
         .eq('id', id);
 

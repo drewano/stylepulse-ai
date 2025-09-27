@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TikTokAccount } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
-export const useAccount = (accountId: string) => {
+export const useAccount = (accountId: number) => {
   const [account, setAccount] = useState<TikTokAccount | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -11,10 +11,10 @@ export const useAccount = (accountId: string) => {
   const fetchAccount = async () => {
     try {
       const { data, error } = await supabase
-        .from('social_accounts')
+        .from('comptes')
         .select('*')
         .eq('id', accountId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       setAccount(data);
@@ -33,7 +33,7 @@ export const useAccount = (accountId: string) => {
   const updateAccount = async (updates: Partial<TikTokAccount>) => {
     try {
       const { data, error } = await supabase
-        .from('social_accounts')
+        .from('comptes')
         .update(updates)
         .eq('id', accountId)
         .select()

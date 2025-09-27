@@ -13,7 +13,7 @@ const AccountDetails = () => {
   const navigate = useNavigate();
   const { accountId } = useParams();
   
-  const { account, loading, updateAccount } = useAccount(accountId || "");
+  const { account, loading, updateAccount } = useAccount(parseInt(accountId || "0"));
   const [editingScript, setEditingScript] = useState<string | null>(null);
   const [editingScriptContent, setEditingScriptContent] = useState("");
 
@@ -77,7 +77,7 @@ const AccountDetails = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
-          <h1 className="text-3xl font-bold">{account.username}</h1>
+          <h1 className="text-3xl font-bold">{account.nom}</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -89,8 +89,8 @@ const AccountDetails = () => {
             <CardContent className="space-y-4">
               <div className="text-center">
                 <img 
-                  src={account.profile_picture_url || "/placeholder.svg"} 
-                  alt={account.username}
+                  src={account.photo_url || account.image_url || "/placeholder.svg"} 
+                  alt={account.nom}
                   className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-border"
                 />
                 <Button variant="outline" size="sm">
@@ -101,8 +101,8 @@ const AccountDetails = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Nom</label>
                 <Input 
-                  value={account.username}
-                  onChange={(e) => updateAccount({ username: e.target.value })}
+                  value={account.nom}
+                  onChange={(e) => updateAccount({ nom: e.target.value })}
                 />
               </div>
 
@@ -113,7 +113,7 @@ const AccountDetails = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Vues totales</label>
-                <div className="text-2xl font-bold text-accent">{account.total_views.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-accent">{account.vues_totales.toLocaleString()}</div>
               </div>
 
               <div className="space-y-2">
@@ -121,8 +121,8 @@ const AccountDetails = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-between"
-                  onClick={() => account.tiktok_url && window.open(account.tiktok_url, '_blank')}
-                  disabled={!account.tiktok_url}
+                  onClick={() => account.lien_tiktok && window.open(account.lien_tiktok, '_blank')}
+                  disabled={!account.lien_tiktok}
                 >
                   Voir le compte
                   <ExternalLink className="h-4 w-4" />
@@ -151,8 +151,8 @@ const AccountDetails = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Personnalité</label>
                   <Textarea 
-                    value={account.personality || ""}
-                    onChange={(e) => updateAccount({ personality: e.target.value })}
+                    value={account.personnalite || ""}
+                    onChange={(e) => updateAccount({ personnalite: e.target.value })}
                     className="min-h-20"
                   />
                 </div>

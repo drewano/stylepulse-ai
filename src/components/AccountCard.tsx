@@ -25,7 +25,7 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
           >
             {isActive ? "Actif" : "Nouveau"}
           </Badge>
-          {account.total_views > 0 && (
+          {account.vues_totales > 0 && (
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3" />
               <span>+{Math.floor(Math.random() * 20 + 5)}%</span>
@@ -36,8 +36,8 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
         {/* Profile Image */}
         <div className="relative mx-auto mb-4 w-fit">
           <img 
-            src={account.profile_picture_url || "/placeholder.svg"} 
-            alt={account.username}
+            src={account.photo_url || account.image_url || "/placeholder.svg"} 
+            alt={account.nom}
             className="w-20 h-20 rounded-full object-cover border-3 border-gradient-primary shadow-lg group-hover:scale-110 transition-transform duration-300"
           />
           {isActive && (
@@ -49,7 +49,7 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
 
         {/* Name */}
         <h3 className="font-bold text-lg mb-3 text-center group-hover:text-primary transition-colors">
-          {account.username}
+          {account.nom}
         </h3>
 
         {/* Stats */}
@@ -68,7 +68,7 @@ const AccountCard = ({ account, onClick }: AccountCardProps) => {
               <span>Vues</span>
             </div>
             <span className="font-semibold text-accent">
-              {account.total_views.toLocaleString()}
+              {account.vues_totales.toLocaleString()}
             </span>
           </div>
 
