@@ -238,37 +238,44 @@ const AccountDetails = () => {
 
     setGeneratingVideo(script.id);
     try {
+      // Call VEO 3 generation function with correct parameters
       const { data, error } = await supabase.functions.invoke('generate-veo-video', {
-        body: { prompt: script.content, scriptId: script.id }
+        body: { 
+          scriptId: parseInt(script.id),
+          prompt: script.content
+        }
       });
 
       if (error) {
         console.error('Error generating video:', error);
         toast({
-          title: "Erreur",
-          description: "Impossible de générer la vidéo",
+          title: "Erreur lors de la génération",
+          description: error.message || "Impossible de générer la vidéo avec VEO 3",
           variant: "destructive",
         });
         return;
       }
 
-      console.log('Video generation result:', data);
+      console.log('VEO 3 video generation result:', data);
       toast({
-        title: "Vidéo générée",
-        description: "La vidéo a été générée et stockée avec succès",
+        title: "Vidéo générée avec VEO 3",
+        description: "La vidéo a été créée et sauvegardée avec succès",
         duration: 5000,
       });
 
-      // Ouvrir la vidéo dans un nouvel onglet
-      if (data?.video?.url) {
-        window.open(data.video.url, '_blank');
+      // Open the video in a new tab if available
+      if (data?.videoUrl) {
+        window.open(data.videoUrl, '_blank');
       }
+
+      // Refresh the scripts to show updated video status
+      loadScripts();
 
     } catch (error) {
       console.error('Error generating video:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de générer la vidéo",
+        title: "Erreur lors de la génération",
+        description: "Une erreur est survenue lors de la génération avec VEO 3",
         variant: "destructive",
       });
     } finally {
