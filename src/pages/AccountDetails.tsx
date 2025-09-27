@@ -23,34 +23,6 @@ const AccountDetails = () => {
   const [generatingScript, setGeneratingScript] = useState(false);
   const { toast } = useToast();
 
-  if (loading) {
-    return <div className="min-h-screen bg-background p-6 flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-        <p>Chargement...</p>
-      </div>
-    </div>;
-  }
-
-  if (!account) {
-    return <div className="min-h-screen bg-background p-6 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-xl font-bold mb-2">Compte introuvable</h1>
-        <Button onClick={() => navigate("/")} variant="outline">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour
-        </Button>
-      </div>
-    </div>;
-  }
-
-  // Load scripts from database
-  useEffect(() => {
-    if (accountId) {
-      loadScripts();
-    }
-  }, [accountId]);
-
   const loadScripts = async () => {
     try {
       setLoadingScripts(true);
@@ -89,6 +61,34 @@ const AccountDetails = () => {
       setLoadingScripts(false);
     }
   };
+
+  // Single useEffect to load scripts
+  useEffect(() => {
+    if (accountId) {
+      loadScripts();
+    }
+  }, [accountId]);
+
+  if (loading) {
+    return <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p>Chargement...</p>
+      </div>
+    </div>;
+  }
+
+  if (!account) {
+    return <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-xl font-bold mb-2">Compte introuvable</h1>
+        <Button onClick={() => navigate("/")} variant="outline">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour
+        </Button>
+      </div>
+    </div>;
+  }
 
   const handleValidateScript = async (scriptId: string) => {
     try {
