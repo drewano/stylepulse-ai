@@ -160,30 +160,33 @@ export type Database = {
       }
       videos: {
         Row: {
+          compte_id: number
           created_at: string
           error_message: string | null
           gcp_operation_name: string
-          id: string
+          id: number
           script_id: number
           status: string
           updated_at: string
           video_url: string | null
         }
         Insert: {
+          compte_id: number
           created_at?: string
           error_message?: string | null
           gcp_operation_name: string
-          id?: string
+          id?: number
           script_id: number
           status?: string
           updated_at?: string
           video_url?: string | null
         }
         Update: {
+          compte_id?: number
           created_at?: string
           error_message?: string | null
           gcp_operation_name?: string
-          id?: string
+          id?: number
           script_id?: number
           status?: string
           updated_at?: string
@@ -191,13 +194,46 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "videos_script_id_fkey"
-            columns: ["script_id"]
+            foreignKeyName: "videos_compte_id_fkey"
+            columns: ["compte_id"]
             isOneToOne: false
-            referencedRelation: "scripts"
+            referencedRelation: "comptes"
             referencedColumns: ["id"]
           },
         ]
+      }
+      videos_backup: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          gcp_operation_name: string | null
+          id: string | null
+          script_id: number | null
+          status: string | null
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          gcp_operation_name?: string | null
+          id?: string | null
+          script_id?: number | null
+          status?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          gcp_operation_name?: string | null
+          id?: string | null
+          script_id?: number | null
+          status?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
