@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Edit3, Trash2, Check, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ExternalLink, Edit3, Trash2, Check, AlertTriangle, Plus, Loader2 } from "lucide-react";
 import { Script } from "@/types";
 import { useAccount } from "@/hooks/useAccount";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const AccountDetails = () => {
   const navigate = useNavigate();
@@ -16,6 +18,10 @@ const AccountDetails = () => {
   const { account, loading, updateAccount } = useAccount(parseInt(accountId || "0"));
   const [editingScript, setEditingScript] = useState<string | null>(null);
   const [editingScriptContent, setEditingScriptContent] = useState("");
+  const [scripts, setScripts] = useState<Script[]>([]);
+  const [loadingScripts, setLoadingScripts] = useState(true);
+  const [generatingScript, setGeneratingScript] = useState(false);
+  const { toast } = useToast();
 
   if (loading) {
     return <div className="min-h-screen bg-background p-6 flex items-center justify-center">
@@ -38,18 +44,116 @@ const AccountDetails = () => {
     </div>;
   }
 
-  // Mock data for scripts - will be replaced with actual data later
-  const mockScripts: Script[] = [
-    { id: "1", content: "Top 5 des apps IA révolutionnaires en 2024", isValidated: false, createdAt: new Date() },
-    { id: "2", content: "Pourquoi ChatGPT va changer ton travail", isValidated: false, createdAt: new Date() },
-  ];
+  // Load scripts from database
+  useEffect(() => {
+    if (accountId) {
+      loadScripts();
+    }
+  }, [accountId]);
 
-  const handleValidateScript = (scriptId: string) => {
-    // TODO: Implement with real Supabase data
+  const loadScripts = async () => {
+    try {
+      setLoadingScripts(true);
+      const { data, error } = await supabase
+        .from('scripts')
+        .select('*')
+        .eq('compte_id', parseInt(accountId || "0"))
+        .order('date_creation', { ascending: false });
+
+      if (error) {
+        console.error('Error loading scripts:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les scripts",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const formattedScripts: Script[] = data.map(script => ({
+        id: script.id.toString(),
+        content: script.script_text,
+        isValidated: script.statut === 'valide',
+        createdAt: new Date(script.date_creation),
+      }));
+
+      setScripts(formattedScripts);
+    } catch (error) {
+      console.error('Error loading scripts:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les scripts",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingScripts(false);
+    }
   };
 
-  const handleDeleteScript = (scriptId: string) => {
-    // TODO: Implement with real Supabase data
+  const handleValidateScript = async (scriptId: string) => {
+    try {
+      const { error } = await supabase
+        .from('scripts')
+        .update({ statut: 'valide' })
+        .eq('id', parseInt(scriptId));
+
+      if (error) {
+        console.error('Error validating script:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de valider le script",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Script validé",
+        description: "Le script a été validé avec succès",
+      });
+
+      loadScripts(); // Reload scripts
+    } catch (error) {
+      console.error('Error validating script:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de valider le script",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteScript = async (scriptId: string) => {
+    try {
+      const { error } = await supabase
+        .from('scripts')
+        .delete()
+        .eq('id', parseInt(scriptId));
+
+      if (error) {
+        console.error('Error deleting script:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de supprimer le script",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Script supprimé",
+        description: "Le script a été supprimé avec succès",
+      });
+
+      loadScripts(); // Reload scripts
+    } catch (error) {
+      console.error('Error deleting script:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le script",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditScript = (script: Script) => {
@@ -57,12 +161,78 @@ const AccountDetails = () => {
     setEditingScriptContent(script.content);
   };
 
-  const handleSaveScript = (scriptId: string) => {
-    // TODO: Implement with real Supabase data
-    setEditingScript(null);
+  const handleSaveScript = async (scriptId: string) => {
+    try {
+      const { error } = await supabase
+        .from('scripts')
+        .update({ script_text: editingScriptContent })
+        .eq('id', parseInt(scriptId));
+
+      if (error) {
+        console.error('Error updating script:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de modifier le script",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Script modifié",
+        description: "Le script a été modifié avec succès",
+      });
+
+      setEditingScript(null);
+      loadScripts(); // Reload scripts
+    } catch (error) {
+      console.error('Error updating script:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier le script",
+        variant: "destructive",
+      });
+    }
   };
 
-  const nonValidatedScripts = mockScripts.filter(script => !script.isValidated);
+  const handleGenerateScript = async () => {
+    if (!accountId) return;
+
+    setGeneratingScript(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-script', {
+        body: { accountId: parseInt(accountId) }
+      });
+
+      if (error) {
+        console.error('Error generating script:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de générer le script",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Script généré",
+        description: "Un nouveau script a été généré avec succès",
+      });
+
+      loadScripts(); // Reload scripts to show the new one
+    } catch (error) {
+      console.error('Error generating script:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer le script",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingScript(false);
+    }
+  };
+
+  const nonValidatedScripts = scripts.filter(script => !script.isValidated);
   const showAlert = nonValidatedScripts.length < 20;
 
   return (
@@ -163,9 +333,29 @@ const AccountDetails = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Scripts en attente</CardTitle>
-                <Badge variant="secondary">
-                  {nonValidatedScripts.length} non validés
-                </Badge>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="secondary">
+                    {nonValidatedScripts.length} non validés
+                  </Badge>
+                  <Button 
+                    onClick={handleGenerateScript}
+                    disabled={generatingScript}
+                    size="sm"
+                    className="bg-gradient-primary"
+                  >
+                    {generatingScript ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        Génération...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Générer script
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {showAlert && (
@@ -177,8 +367,19 @@ const AccountDetails = () => {
                   </div>
                 )}
 
-                <div className="max-h-96 overflow-y-auto space-y-3">
-                  {mockScripts.map((script) => (
+                {loadingScripts ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                    <p>Chargement des scripts...</p>
+                  </div>
+                ) : scripts.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    <p>Aucun script généré pour le moment</p>
+                    <p className="text-sm mt-2">Cliquez sur "Générer script" pour commencer</p>
+                  </div>
+                ) : (
+                  <div className="max-h-96 overflow-y-auto space-y-3">
+                    {scripts.map((script) => (
                     <div 
                       key={script.id} 
                       className={`p-4 rounded-lg border ${script.isValidated ? 'bg-success/10 border-success/30' : 'bg-card'}`}
@@ -241,8 +442,9 @@ const AccountDetails = () => {
                         </>
                       )}
                     </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
