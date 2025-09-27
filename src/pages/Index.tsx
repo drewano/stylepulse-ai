@@ -112,70 +112,31 @@ const Index = () => {
       {/* Hero Header */}
       <div className="bg-gradient-primary text-primary-foreground py-12 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Building2 className="h-6 w-6" />
-                  <span className="text-sm font-medium opacity-90">Entreprise</span>
-                </div>
-                <Input
-                  value={company.name}
-                  onChange={(e) => setCompany(prev => ({ ...prev, name: e.target.value }))}
-                  className="text-3xl font-bold bg-white/10 border-white/20 text-white placeholder:text-white/70 focus-visible:ring-white/30"
-                  placeholder="Nom de votre entreprise"
-                />
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Building2 className="h-6 w-6" />
+                <span className="text-sm font-medium opacity-90">Entreprise</span>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <FileText className="h-5 w-5" />
-                  <span className="text-sm font-medium opacity-90">Description</span>
-                </div>
-                <Textarea
-                  value={company.description}
-                  onChange={(e) => setCompany(prev => ({ ...prev, description: e.target.value }))}
-                  className="min-h-24 bg-white/10 border-white/20 text-white placeholder:text-white/70 focus-visible:ring-white/30"
-                  placeholder="Description de votre entreprise et de ses activités"
-                />
-              </div>
+              <Input
+                value={company.name}
+                onChange={(e) => setCompany(prev => ({ ...prev, name: e.target.value }))}
+                className="text-3xl font-bold bg-white/10 border-white/20 text-white placeholder:text-white/70 focus-visible:ring-white/30"
+                placeholder="Nom de votre entreprise"
+              />
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-white/10 border-white/20 backdrop-blur">
-                <CardContent className="p-6 text-center">
-                  <Users className="h-8 w-8 mx-auto mb-2 text-accent-light" />
-                  <div className="text-2xl font-bold text-white">{totalAccounts}</div>
-                  <div className="text-sm text-white/80">Comptes TikTok</div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/10 border-white/20 backdrop-blur">
-                <CardContent className="p-6 text-center">
-                  <Eye className="h-8 w-8 mx-auto mb-2 text-accent-light" />
-                  <div className="text-2xl font-bold text-white">{totalViews.toLocaleString()}</div>
-                  <div className="text-sm text-white/80">Vues totales</div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/10 border-white/20 backdrop-blur">
-                <CardContent className="p-6 text-center">
-                  <TrendingUp className="h-8 w-8 mx-auto mb-2 text-accent-light" />
-                  <div className="text-2xl font-bold text-white">{avgDays}</div>
-                  <div className="text-sm text-white/80">Jours moyens</div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/10 border-white/20 backdrop-blur">
-                <CardContent className="p-6 text-center">
-                  <Heart className="h-8 w-8 mx-auto mb-2 text-accent-light" />
-                  <div className="text-2xl font-bold text-white">
-                    {accounts.filter(a => a.daysInInternship > 0).length}
-                  </div>
-                  <div className="text-sm text-white/80">Actifs</div>
-                </CardContent>
-              </Card>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-5 w-5" />
+                <span className="text-sm font-medium opacity-90">Description</span>
+              </div>
+              <Textarea
+                value={company.description}
+                onChange={(e) => setCompany(prev => ({ ...prev, description: e.target.value }))}
+                className="min-h-24 bg-white/10 border-white/20 text-white placeholder:text-white/70 focus-visible:ring-white/30"
+                placeholder="Description de votre entreprise et de ses activités"
+              />
             </div>
           </div>
         </div>
